@@ -84,7 +84,7 @@ const Table = ({itemArrayProps, setMerchants, args}) => {
     <table>
       <tbody>
         <tr className='rownames'>
-          <button>hey</button>
+          :
           {itemArray[0] ? 
             Object.keys(itemArray[0]).map((field) => (
             <td>{field}</td>
@@ -100,10 +100,11 @@ const Table = ({itemArrayProps, setMerchants, args}) => {
     </div>
   )
 }
-
+let globalTable = "merchants"
 const actions = {
   getData:  function getMerchant(setMerchants) {
-    const query = "SELECT * from merchants;"
+    console.log(globalTable)
+    const query = `SELECT * from ${globalTable};`
     fetch(routes.query, {
       method: 'POST',
       headers: {
@@ -116,7 +117,7 @@ const actions = {
       })
       .then(data => {
         let merchList = (JSON.parse(data))
-        setMerchants(merchList);
+        setMerchants(merchList.reverse());
       });
   },
   searchData: function searchMerchants(setMerchants, table, key_column) {
@@ -162,6 +163,10 @@ const actions = {
     const query = `DELETE FROM ${table} WHERE "${key_column}" = '${id}'`
     actions.sendQuery(setMerchants, query)
   },
+  addNewRow: function addNewRow(setMerchants, table,  key_column, blank_column) {
+    const query = `INSERT INTO ${table} ("${blank_column}") VALUES (NULL)`
+    actions.sendQuery(setMerchants, query)
+  },
   sendQuery: function sendQuery(setMerchants, query) {
     console.log(query)
     fetch(routes.query, {
@@ -192,6 +197,7 @@ const App = () => {
   const [rows, setRows] = useState(200)
   const [table, setTable] = useState("merchants")
   const [keyColumn, setKeyColumn] = useState("id")
+  const [blankColumn, setBlankColumn] = useState("id")
   const [page, setPage] = useState(0)
   const args = {
     rows: rows,
@@ -216,12 +222,15 @@ const App = () => {
       })
       .then(data => {
         let merchList = (JSON.parse(data))
-        setMerchants(merchList);
+        const blankColumn =(Object.keys(merchList[0])[0])
+        setBlankColumn(blankColumn)
+        setMerchants(merchList.reverse());
       });
   }
   const handleTableChange = () => {
     let tableName = prompt("Enter new table name")
     setTable(tableName)
+    globalTable = tableName
     getData();
   }
   const pageRefresh = () => {
@@ -302,24 +311,27 @@ const App = () => {
   return (
     <div>
       <h1>PostgreSQL Record Manager</h1>
-      {table}
+      Using table: {table}
       <hr />
       <p>Page {pagenum} with {rows} rows per page</p>
       {/* <button onClick={() => actions.searchData(setMerchants)}>Search</button> */}
       <div>
-
+        <MenuButton clickFunction={() => actions.addNewRow(setMerchants, table, keyColumn, blankColumn)} title = "Add new row" />
+        <MenuButton clickFunction={handleTableChange} title = "Change Table"/>
+        <MenuButton clickFunction={pageRefresh} title = "Page Refresh"/>
       </div>
-      <MenuButton clickFunction={handleTableChange} title = "Change Table"/>
-      <MenuButton clickFunction={pageRefresh} title = "Page Refresh"/>
-      <MenuButton clickFunction={() => actions.sendQuery(setMerchants)} title = "Send Query" />
       <MenuButton className='search' clickFunction={() => actions.searchData(setMerchants, table, keyColumn)} title = "Search"/>
       <button onClick={handleRowChange}>Set Rows Per Page</button>
-
-      <MenuButton className='Add Entry' clickFunction={() => actions.createData(setMerchants)} title = "Add Entry"/>
-      <MenuButton className='delete' clickFunction={() => actions.deleteData(setMerchants, table, keyColumn)} title = "Delete"/>
-      <button className = 'nav' onClick={handleNextPage}>Next page</button>
-      <button className = 'nav' onClick={handlePrevPage}>Previous page</button>
+      {/* <div>
+        <MenuButton className='Add Entry' clickFunction={() => actions.createData(setMerchants)} title = "Add Entry"/>
+        <MenuButton className='delete' clickFunction={() => actions.deleteData(setMerchants, table, keyColumn)} title = "Delete"/>
+      </div> */}
+      <div>
+        <button className = 'nav' onClick={handleNextPage}>Next page</button>
+        <button className = 'nav' onClick={handlePrevPage}>Previous page</button>
+      </div>
       <button className = 'addID' onClick={addID}>add unique ids</button>
+      {/* <MenuButton clickFunction={() => actions.sendQuery(setMerchants)} title = "Send Query" /> */}
       <Table itemArrayProps = {merchants} setMerchants={setMerchants} args = {args}/>
     </div>
   );
