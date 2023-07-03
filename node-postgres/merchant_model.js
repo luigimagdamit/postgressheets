@@ -1,5 +1,5 @@
-const table = "test";
-const key_column = "id"
+const table = "merchants";
+const key_column = "name"
 
 const Pool = require('pg').Pool
 const pool = new Pool({
@@ -24,7 +24,18 @@ const addUniqueColumn = () => {
     })
   }) 
 }
-
+const processQuery = (query) => {
+  return new Promise(function(resolve, reject) {
+    
+    console.log(query)
+    pool.query(query, (error, results) => {
+      if (error) {
+        reject(error)
+      }
+      resolve(results.rows);
+    })
+  }) 
+}
 const getMerchants = (page, rows) => {
 
     return new Promise(function(resolve, reject) {
@@ -100,5 +111,6 @@ const getMerchants = (page, rows) => {
     deleteMerchant,
     updateMerchant,
     searchMerchants,
-    addUniqueColumn
+    addUniqueColumn,
+    processQuery
   }

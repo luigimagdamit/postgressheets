@@ -89,6 +89,16 @@ console.log(req.params)
     res.status(500).send(error);
   })
 })
+app.post('/merchants/query', (req, res) => {
+  console.log(req.body.query)
+    merchant_model.processQuery(req.body.query)
+    .then(response => {
+      res.status(200).send(response);
+    })
+    .catch(error => {
+      res.status(500).send(error);
+    })
+  })
 app.listen(port, () => {
   console.log(`App running on port ${port}.`)
 })
