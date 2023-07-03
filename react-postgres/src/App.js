@@ -4,25 +4,30 @@ import './App.css';
 const routes = {
   query: "http://localhost:3001/merchants/query"
 }
-const Button = ({onSubmit, text}) => {
-  return(
-    <button onSubmit={() => onSubmit}>{text}</button>
-  )
-}
-const Entry = (props) => {
+
+const Entry = ({dataProps, setMerchants, args}) => {
   const [data, setData] = useState({})
   const [edited, setEdited] = useState({})
   
   useEffect(() => {
     setEdited({})
-    setData(props.data)
+    setData(dataProps)
   }, [])
 
   function updateMerchant(id, field, newval) {
-    const table = props.args.table
-    const key_column = props.args.keyColumn
+    const table = args.table
+    const key_column = args.keyColumn
     const query = `UPDATE ${table} SET "${field}" = '${newval}' WHERE "${key_column}" = '${id}';`
-    actions.sendQuery(props.setMerchants, query)
+    actions.sendQuery(setMerchants, query)
+  }
+  const deleteMerchant = () => {
+    const query = `DELETE FROM ${args.table} WHERE "${args.keyColumn}" = '${data.id}';`
+
+    let confirmation = prompt("Are you sure you want to delete this?")
+    if(confirmation === "yes"){
+      actions.sendQuery(setMerchants, query)
+    }
+    
   }
   const handleInputChange = (e, field) => {
     let newEdited = {
@@ -55,6 +60,7 @@ const Entry = (props) => {
         <tr>
           <button onClick={() => console.log(data)}>Print State</button>
           <button onClick={() => onSubmit("DAY_OF_MONTH_NUM")}>Submit Changes</button>
+          <button onClick={deleteMerchant}>Delete Item</button>
           {Object.keys(data).map((field) => (
             <td>
               <div 
@@ -63,7 +69,7 @@ const Entry = (props) => {
                   handleInputChange(e.currentTarget.textContent, field)
                 }
               >
-                {props.data[field]}
+                {dataProps[field]}
               </div>
               </td>
           ))}
@@ -71,8 +77,8 @@ const Entry = (props) => {
 
   )
 }
-const Table = (props) => {
-  const itemArray = Array.from(props.itemArray);
+const Table = ({itemArrayProps, setMerchants, args}) => {
+  const itemArray = Array.from(itemArrayProps);
   return (
     <div>
     <table>
@@ -87,7 +93,7 @@ const Table = (props) => {
           null}
         </tr>
       {itemArray.map((user) => (
-        <Entry data = {user} setMerchants={props.setMerchants} args = {props.args}/>
+        <Entry dataProps = {user} setMerchants={setMerchants} args = {args}/>
       ))}
       </tbody>
     </table>
@@ -180,11 +186,11 @@ const MenuButton = ({className, clickFunction, title}) => {
     <button className={className} onClick={clickFunction}>{title}</button>
   )
 }
-function App() {
+const App = () => {
   const [merchants, setMerchants] = useState(false);
   const [pagenum, setpagenum] = useState(0)
   const [rows, setRows] = useState(200)
-  const [table, setTable] = useState("test")
+  const [table, setTable] = useState("merchants")
   const [keyColumn, setKeyColumn] = useState("id")
   const [page, setPage] = useState(0)
   const args = {
@@ -212,6 +218,14 @@ function App() {
         let merchList = (JSON.parse(data))
         setMerchants(merchList);
       });
+  }
+  const handleTableChange = () => {
+    let tableName = prompt("Enter new table name")
+    setTable(tableName)
+    getData();
+  }
+  const pageRefresh = () => {
+    getData();
   }
   function addID() {
     fetch('http://localhost:3001/merchants/unique')
@@ -288,9 +302,15 @@ function App() {
   return (
     <div>
       <h1>PostgreSQL Record Manager</h1>
+      {table}
       <hr />
       <p>Page {pagenum} with {rows} rows per page</p>
       {/* <button onClick={() => actions.searchData(setMerchants)}>Search</button> */}
+      <div>
+
+      </div>
+      <MenuButton clickFunction={handleTableChange} title = "Change Table"/>
+      <MenuButton clickFunction={pageRefresh} title = "Page Refresh"/>
       <MenuButton clickFunction={() => actions.sendQuery(setMerchants)} title = "Send Query" />
       <MenuButton className='search' clickFunction={() => actions.searchData(setMerchants, table, keyColumn)} title = "Search"/>
       <button onClick={handleRowChange}>Set Rows Per Page</button>
@@ -300,7 +320,7 @@ function App() {
       <button className = 'nav' onClick={handleNextPage}>Next page</button>
       <button className = 'nav' onClick={handlePrevPage}>Previous page</button>
       <button className = 'addID' onClick={addID}>add unique ids</button>
-      <Table itemArray = {merchants} setMerchants={setMerchants} args = {args}/>
+      <Table itemArrayProps = {merchants} setMerchants={setMerchants} args = {args}/>
     </div>
   );
 }
