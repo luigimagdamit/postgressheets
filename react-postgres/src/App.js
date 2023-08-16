@@ -9,7 +9,7 @@ const routes = {
   query: "http://localhost:3001/merchants/query"
 }
 
-const Entry = ({dataProps, setMerchants, args}) => {
+const Entry = ({dataProps, args}) => {
   const dispatch = useDispatch()
   useEffect(() => {
   }, [])
@@ -21,12 +21,12 @@ const Entry = ({dataProps, setMerchants, args}) => {
     setData(dataProps)
   }, [])
 
-  function updateMerchant(id, field, newval) {
-    const table = args.table
-    const key_column = args.keyColumn
-    const query = `UPDATE ${table} SET "${field}" = '${newval}' WHERE "${key_column}" = '${id}';`
-    actions.sendQuery(setMerchants, query)
-  }
+  // function updateMerchant(id, field, newval) {
+  //   const table = args.table
+  //   const key_column = args.keyColumn
+  //   const query = `UPDATE ${table} SET "${field}" = '${newval}' WHERE "${key_column}" = '${id}';`
+  //   actions.sendQuery(setMerchants, query)
+  // }
   const deleteMerchant = () => {
     // const query = `DELETE FROM ${args.table} WHERE "${args.keyColumn}" = '${data.id}';`
 
@@ -47,22 +47,22 @@ const Entry = ({dataProps, setMerchants, args}) => {
   }
   const onSubmit = (field) => {
     
-    const newData = {
-      ...data,
-      ...edited
-    }
-    setData(newData)
-    // changes are only visible after the function ends
-    //
-    const fieldsArray = (Object.keys(newData))
-    const valuesArray = Object.values(newData)
+    // const newData = {
+    //   ...data,
+    //   ...edited
+    // }
+    // setData(newData)
+    // // changes are only visible after the function ends
+    // //
+    // const fieldsArray = (Object.keys(newData))
+    // const valuesArray = Object.values(newData)
 
-    // send a new update request for every item in the arrays
-    for (let i = 0; i < fieldsArray.length; i++) {
-      updateMerchant(data.id, fieldsArray[i], valuesArray[i])
-    }
-    alert("Attempted update");
-    // NEED TO DO UPSERT IN SERVER FUNCTION
+    // // send a new update request for every item in the arrays
+    // for (let i = 0; i < fieldsArray.length; i++) {
+    //   updateMerchant(data.id, fieldsArray[i], valuesArray[i])
+    // }
+    // alert("Attempted update");
+    // // NEED TO DO UPSERT IN SERVER FUNCTION
   }
   return (
         <tr>
@@ -85,7 +85,7 @@ const Entry = ({dataProps, setMerchants, args}) => {
 
   )
 }
-const Table = ({itemArrayProps, setMerchants, args}) => {
+const Table = ({itemArrayProps, args}) => {
   const itemArray = Array.from(itemArrayProps).reverse();
   return (
     <div>
@@ -101,37 +101,12 @@ const Table = ({itemArrayProps, setMerchants, args}) => {
           null}
         </tr>
       {itemArray.map((user) => (
-        <Entry dataProps = {user} setMerchants={setMerchants} args = {args}/>
+        <Entry dataProps = {user} args = {args}/>
       ))}
       </tbody>
     </table>
     </div>
   )
-}
-
-const actions = {
-  deleteData: function deleteMerchant(setMerchants, table, key_column) {
-    let id = prompt('Enter merchant id');
-    const query = `DELETE FROM ${table} WHERE "${key_column}" = '${id}'`
-    actions.sendQuery(setMerchants, query)
-  },
-  sendQuery: function sendQuery(setMerchants, query) {
-    console.log(query)
-    fetch(routes.query, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({query}),
-    })
-      .then(response => {
-        return response.text();
-      })
-      .then(data => {
-        actions.getData(setMerchants);
-      });
-  },
-
 }
 
 const MenuButton = ({className, clickFunction, title}) => {
@@ -148,7 +123,7 @@ const MainApp = () => {
   const [merchants, setMerchants] = useState(false);
   const [pagenum, setpagenum] = useState(0)
   const [rows, setRows] = useState(200)
-  const [table, setTable] = useState("merchants")
+  const [table, setTable] = useState("test")
   const [keyColumn, setKeyColumn] = useState("id")
   const [blankColumn, setBlankColumn] = useState("id")
   const [page, setPage] = useState(0)
@@ -156,14 +131,11 @@ const MainApp = () => {
     rows: rows,
     table: table,
     keyColumn: keyColumn,
-    page: page
+    page: pagenum
   }
   useEffect(() => {
     pageRefresh()
   }, []);
-  const addToDelete = (rownum) => {
-
-  }
   const addNewRow = () => {
     let firstEntry = Object.keys(tableRedux[0])
     console.log(firstEntry)
@@ -200,7 +172,6 @@ const MainApp = () => {
         
         const blankColumn =(Object.keys(merchList[0])[0])
         setBlankColumn(blankColumn)
-        setMerchants(merchList.reverse());
         console.log(tableRedux)
       });
   }
@@ -261,12 +232,6 @@ const MainApp = () => {
     let rowsPerPage = prompt("Enter rows per page");
     setRows(rowsPerPage)
     pageRefresh()
-
-  }
-  function handleRowChange() {
-    setRowsPerPage()
-    
-
   }
   function handleNextPage() {
     let newpage = pagenum + 1
@@ -306,7 +271,6 @@ const MainApp = () => {
           dispatch(addRow(merchList[i]))
         }
         setBlankColumn(blankColumn)
-        setMerchants(merchList);
       });
     }
   }
@@ -314,28 +278,28 @@ const MainApp = () => {
   return (
     <div>
       <h1>PostgreSQL Record Manager</h1>
-      Using table: {table}
-      New Tray: {newTray}
-      Delete Tray: {deleteTray}
-      <button className = 'nav' onClick={commitDeletes}>Commit Deletion</button>
-      <button className = 'nav' onClick={addNewRow}>Add Blank Row</button>
-      <button className = 'nav' onClick={commitNewRows}>Commit New Rows</button>
+      
       <hr />
       <p>Page {pagenum} with {rows} rows per page</p>
       <div>
-        <MenuButton clickFunction={addNewRow} title = "Add new row" />
         <MenuButton clickFunction={handleTableChange} title = "Change Table"/>
         <MenuButton clickFunction={pageRefresh} title = "Page Refresh"/>
       </div>
-      <MenuButton className='search' clickFunction={() => actions.searchData(setMerchants, table, keyColumn)} title = "Search"/>
-      <button onClick={handleRowChange}>Set Rows Per Page</button>
-      <MenuButton className='delete' clickFunction={() => actions.deleteData(setMerchants, table, keyColumn)} title = "Delete"/>
+      <button onClick={setRowsPerPage}>Set Rows Per Page</button>
       <div>
         <button className = 'nav' onClick={handleNextPage}>Next page</button>
         <button className = 'nav' onClick={handlePrevPage}>Previous page</button>
       </div>
-      {/* <MenuButton clickFunction={() => actions.sendQuery(setMerchants)} title = "Send Query" /> */}
-      <Table itemArrayProps = {tableRedux} setMerchants={setMerchants} args = {args}/>
+      <hr />
+      <button className = 'nav' onClick={commitDeletes}>Commit Deletion</button>
+      <button className = 'nav' onClick={addNewRow}>Add Blank Row</button>
+      <button className = 'nav' onClick={commitNewRows}>Commit New Rows</button>
+      <hr />
+      <p>Using table: {table}</p>
+      <p>New Tray: {newTray}</p>
+      <p>Delete Tray: {deleteTray}</p>
+      
+      <Table itemArrayProps = {tableRedux} args = {args}/>
     </div>
   );
 }
