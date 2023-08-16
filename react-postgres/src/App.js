@@ -6,6 +6,8 @@ const routes = {
 }
 
 const Entry = ({dataProps, setMerchants, args}) => {
+  useEffect(() => {
+  }, [])
   const [data, setData] = useState({})
   const [edited, setEdited] = useState({})
   
@@ -21,12 +23,12 @@ const Entry = ({dataProps, setMerchants, args}) => {
     actions.sendQuery(setMerchants, query)
   }
   const deleteMerchant = () => {
-    const query = `DELETE FROM ${args.table} WHERE "${args.keyColumn}" = '${data.id}';`
+    // const query = `DELETE FROM ${args.table} WHERE "${args.keyColumn}" = '${data.id}';`
 
-    let confirmation = prompt("Are you sure you want to delete this?")
-    if(confirmation === "yes"){
-      actions.sendQuery(setMerchants, query)
-    }
+    // let confirmation = prompt("Are you sure you want to delete this?")
+    // if(confirmation === "yes"){
+    //   actions.sendQuery(setMerchants, query)
+    // }
     
   }
   const handleInputChange = (e, field) => {
@@ -100,71 +102,11 @@ const Table = ({itemArrayProps, setMerchants, args}) => {
     </div>
   )
 }
-let globalTable = "merchants"
+
 const actions = {
-  getData:  function getMerchant(setMerchants) {
-    console.log(globalTable)
-    const query = `SELECT * from ${globalTable};`
-    fetch(routes.query, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({query}),
-    })
-      .then(response => {
-        return response.text();
-      })
-      .then(data => {
-        let merchList = (JSON.parse(data))
-        setMerchants(merchList.reverse());
-      });
-  },
-  searchData: function searchMerchants(setMerchants, table, key_column) {
-    let val = prompt("enter search value")
-    const query = `SELECT * FROM ${table} WHERE "${key_column}" = '${val}';`
-    fetch(routes.query, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({query}),
-    })
-      .then(response => {
-        return response.text();
-      })
-      .then(data => {
-        console.log(data)
-        let merchList = (JSON.parse(data))
-        setMerchants(merchList);
-      });
-  
-  },
-  createData: function createMerchant(setMerchants) {
-    let fields = prompt('Enter fields');
-    let values = prompt('enter values');
-    fetch(routes.query, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({fields, values}),
-    })
-      .then(response => {
-        return response.text();
-      })
-      .then(data => {
-        alert(data);
-        actions.getData(setMerchants);
-      });
-  },
   deleteData: function deleteMerchant(setMerchants, table, key_column) {
     let id = prompt('Enter merchant id');
     const query = `DELETE FROM ${table} WHERE "${key_column}" = '${id}'`
-    actions.sendQuery(setMerchants, query)
-  },
-  addNewRow: function addNewRow(setMerchants, table,  key_column, blank_column) {
-    const query = `INSERT INTO ${table} ("${blank_column}") VALUES (NULL)`
     actions.sendQuery(setMerchants, query)
   },
   sendQuery: function sendQuery(setMerchants, query) {
@@ -206,17 +148,68 @@ const App = () => {
     page: page
   }
   useEffect(() => {
-    getData()
+    pageRefresh()
   }, []);
-  const getData = () => {
-    const query = `SELECT * from ${table};`
-    fetch('http://localhost:3001/merchants/query', {
+  const addNewRow = () => {
+
+    let fields = Object.keys(merchants[0])[0]
+    let values = ""
+    
+    fetch('http://localhost:3001/create', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({query}),
+      body: JSON.stringify({table, fields, values}),
     })
+      .then(response => {
+        return response.text();
+      })
+      setTimeout(() => {
+        pageRefresh()
+      }, 3000);
+    
+  }
+  const handleTableChange = () => {
+    let tableName = prompt("Enter new table name")
+    setTable(tableName)
+
+    setTimeout(() => {
+      pageRefresh()
+    }, 3000);
+  }
+  const pageRefresh = () => {
+    fetch(`http://localhost:3001/?table=${table}&page=${pagenum}&limit=${rows}`)
+      .then(response => {
+        return response.text();
+      })
+      .then(data => {
+        let merchList = (JSON.parse(data))
+        for (let i = 0; i < merchList.length; i++) {
+          merchList[i].rownum = i
+        }
+        const blankColumn =(Object.keys(merchList[0])[0])
+        setBlankColumn(blankColumn)
+        setMerchants(merchList.reverse());
+        console.log(merchList)
+      });
+  }
+  function setRowsPerPage() {
+    let rowsPerPage = prompt("Enter rows per page");
+    setRows(rowsPerPage)
+    pageRefresh()
+
+  }
+  function handleRowChange() {
+    setRowsPerPage()
+    
+
+  }
+  function handleNextPage() {
+    let newpage = pagenum + 1
+    setpagenum(newpage)
+
+    fetch(`http://localhost:3001/?table=${table}&page=${newpage}&limit=${rows}`)
       .then(response => {
         return response.text();
       })
@@ -224,88 +217,25 @@ const App = () => {
         let merchList = (JSON.parse(data))
         const blankColumn =(Object.keys(merchList[0])[0])
         setBlankColumn(blankColumn)
-        setMerchants(merchList.reverse());
-      });
-  }
-  const handleTableChange = () => {
-    let tableName = prompt("Enter new table name")
-    setTable(tableName)
-    globalTable = tableName
-    getData();
-  }
-  const pageRefresh = () => {
-    getData();
-  }
-  function addID() {
-    fetch('http://localhost:3001/merchants/unique')
-      .then(response => {
-        return response.text();
-      })
-      .then(data => {
-        let merchList = (JSON.parse(data))
-        setMerchants(merchList);
-        console.log(merchants)
-      });
-  }
-  function setRowsPerPage() {
-    let rowsPerPage = prompt("Enter rows per page");
-    setRows(rowsPerPage)
-
-  }
-  function handleRowChange() {
-    setRowsPerPage()
-    nextPage(pagenum)
-
-  }
-  function nextPage(pagenum) {
-    fetch(`http://localhost:3001/nextpage`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ pagenum, rows }),
-    })
-      .then(response => {
-        return response.text();
-      })
-      .then(data => {
-        let merchList = (JSON.parse(data))
         setMerchants(merchList);
       });
-  }
-  function handleNextPage() {
-    let newpage = pagenum + 1
-    setpagenum(newpage)
-    console.log(newpage)
-
-    nextPage(newpage)
+    // nextPage(newpage)
   }
   function handlePrevPage() {
     let newpage = pagenum - 1
     if (newpage >= 0){
       setpagenum(newpage)
-      console.log(newpage)
-      prevPage(newpage)
-    }
-    
-
-    prevPage(newpage)
-  }
-  function prevPage() {
-    fetch(`http://localhost:3001/nextpage`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ pagenum, rows }),
-    })
+      fetch(`http://localhost:3001/?table=${table}&page=${newpage}&limit=${rows}`)
       .then(response => {
         return response.text();
       })
       .then(data => {
         let merchList = (JSON.parse(data))
+        const blankColumn =(Object.keys(merchList[0])[0])
+        setBlankColumn(blankColumn)
         setMerchants(merchList);
       });
+    }
   }
 
   return (
@@ -314,23 +244,18 @@ const App = () => {
       Using table: {table}
       <hr />
       <p>Page {pagenum} with {rows} rows per page</p>
-      {/* <button onClick={() => actions.searchData(setMerchants)}>Search</button> */}
       <div>
-        <MenuButton clickFunction={() => actions.addNewRow(setMerchants, table, keyColumn, blankColumn)} title = "Add new row" />
+        <MenuButton clickFunction={addNewRow} title = "Add new row" />
         <MenuButton clickFunction={handleTableChange} title = "Change Table"/>
         <MenuButton clickFunction={pageRefresh} title = "Page Refresh"/>
       </div>
       <MenuButton className='search' clickFunction={() => actions.searchData(setMerchants, table, keyColumn)} title = "Search"/>
       <button onClick={handleRowChange}>Set Rows Per Page</button>
-      {/* <div>
-        <MenuButton className='Add Entry' clickFunction={() => actions.createData(setMerchants)} title = "Add Entry"/>
-        <MenuButton className='delete' clickFunction={() => actions.deleteData(setMerchants, table, keyColumn)} title = "Delete"/>
-      </div> */}
+      <MenuButton className='delete' clickFunction={() => actions.deleteData(setMerchants, table, keyColumn)} title = "Delete"/>
       <div>
         <button className = 'nav' onClick={handleNextPage}>Next page</button>
         <button className = 'nav' onClick={handlePrevPage}>Previous page</button>
       </div>
-      <button className = 'addID' onClick={addID}>add unique ids</button>
       {/* <MenuButton clickFunction={() => actions.sendQuery(setMerchants)} title = "Send Query" /> */}
       <Table itemArrayProps = {merchants} setMerchants={setMerchants} args = {args}/>
     </div>

@@ -36,10 +36,46 @@ const processQuery = (query) => {
     })
   }) 
 }
-const getMerchants = (page, rows) => {
 
+const getMerchants = (body) => {
     return new Promise(function(resolve, reject) {
-      q2 = `SELECT * FROM ${table} ORDER BY "${key_column}" ASC LIMIT ${rows} OFFSET ${page}*${rows}`
+      q2 = `SELECT * FROM ${body.table} LIMIT ${body.limit} OFFSET ${body.page}*${body.limit}`
+      console.log(q2)
+      pool.query(q2, (error, results) => {
+        if (error) {
+          reject(error)
+        }
+        resolve(results.rows);
+      })
+    }) 
+  }
+  const createRow = (body) => {
+    return new Promise(function(resolve, reject) {
+      let q = `INSERT INTO ${body.table} ("${body.fields}") VALUES ('${body.values}')`
+      console.log(q)
+      pool.query(q, (error, results) => {
+        if (error) {
+          reject(error)
+        }
+        resolve(results.rows)
+      })
+    })
+  }
+  const updateRow = (body) => {
+    return new Promise(function(resolve, reject) {
+      let q = `INSERT INTO ${body.table} ("${body.fields}") VALUES ('${body.values}')`
+      console.log(q)
+      pool.query(q, (error, results) => {
+        if (error) {
+          reject(error)
+        }
+        resolve(results.rows)
+      })
+    })
+  }
+  const searchColumn = (body) => {
+    return new Promise(function(resolve, reject) {
+      q2 = `SELECT * FROM ${body.table} WHERE "${body.key_column}" = '${body.value}'`
       console.log(q2)
       pool.query(q2, (error, results) => {
         if (error) {
@@ -62,7 +98,6 @@ const getMerchants = (page, rows) => {
     }) 
   }
   const createMerchant = (body) => {
-    console.log(body)
     return new Promise(function(resolve, reject) {
       const { fields, values } = body
       
@@ -104,7 +139,20 @@ const getMerchants = (page, rows) => {
       })
     })
   }
-  
+  const deleteRow = (body) => {
+    return new Promise(function(resolve, reject) {
+      let q = `DELETE FROM ${body.table} WHERE "${body.key_column}" = '${body.target}'`
+      console.log(q)
+      pool.query(q, (error, results) => {
+        console.log(results)
+        if (error) {
+        console.log("bruh")
+          reject(error)
+        }
+        resolve(results.rows)
+      })
+    })
+  }
   module.exports = {
     getMerchants,
     createMerchant,
@@ -112,5 +160,8 @@ const getMerchants = (page, rows) => {
     updateMerchant,
     searchMerchants,
     addUniqueColumn,
-    processQuery
+    processQuery,
+    createRow,
+    searchColumn,
+    deleteRow
   }

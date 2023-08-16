@@ -17,7 +17,13 @@ app.use(function (req, res, next) {
 
 // initial fetch function to grab data from postgres database
 app.get('/', (req, res) => {
-  merchant_model.getMerchants(page, rows)
+  let table = req.query.table
+  let page = req.query.page
+  let limit = req.query.limit
+  
+  body = {table, page, limit}
+  console.log(body)
+  merchant_model.getMerchants(body)
   .then(response => {
     res.status(200).send(response);
   })
@@ -38,8 +44,9 @@ app.get('/merchants/unique', (req, res) => {
 
 // use the req.body as the input
 // req.body will have fields like name, id, etc
-app.post('/merchants', (req, res) => {
-  merchant_model.createMerchant(req.body)
+app.post('/create', (req, res) => {
+  console.log(req.body)
+  merchant_model.createRow(req.body)
   .then(response => {
     res.status(200).send(response);
   })
@@ -47,7 +54,16 @@ app.post('/merchants', (req, res) => {
     res.status(500).send(error);
   })
 })
-
+app.post('/update', (req, res) => {
+  console.log(req.body)
+  merchant_model.createRow(req.body)
+  .then(response => {
+    res.status(200).send(response);
+  })
+  .catch(error => {
+    res.status(500).send(error);
+  })
+})
 // different from above function where the specific fields are inputted into the function
 app.post('/nextpage', (req, res) => {
   console.log(req.body)
@@ -62,6 +78,26 @@ app.post('/nextpage', (req, res) => {
 app.post('/search', (req, res) => {
   console.log(req.body)
   merchant_model.searchMerchants(req.body.id)
+  .then(response => {
+    res.status(200).send(response);
+  })
+  .catch(error => {
+    res.status(500).send(error);
+  })
+})
+app.post('/searchColumn', (req, res) => {
+  console.log(req.body)
+  merchant_model.searchColumn(req.body)
+  .then(response => {
+    res.status(200).send(response);
+  })
+  .catch(error => {
+    res.status(500).send(error);
+  })
+})
+app.post('/deleteRow', (req, res) => {
+  console.log(req.body)
+  merchant_model.deleteRow(req.body)
   .then(response => {
     res.status(200).send(response);
   })
