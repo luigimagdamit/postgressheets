@@ -1,11 +1,16 @@
 import React, {useState, useEffect} from 'react';
 import './App.css';
-
+import store from './app/store'
+import { Provider } from 'react-redux'
+import { Counter } from './Counter'
+import { useSelector, useDispatch } from 'react-redux'
+import { assignTable, addRow, addToDelete } from './features/tableSlice'
 const routes = {
   query: "http://localhost:3001/merchants/query"
 }
 
 const Entry = ({dataProps, setMerchants, args}) => {
+  const dispatch = useDispatch()
   useEffect(() => {
   }, [])
   const [data, setData] = useState({})
@@ -29,6 +34,7 @@ const Entry = ({dataProps, setMerchants, args}) => {
     // if(confirmation === "yes"){
     //   actions.sendQuery(setMerchants, query)
     // }
+    dispatch(addToDelete(data.rownum))
     
   }
   const handleInputChange = (e, field) => {
@@ -133,7 +139,11 @@ const MenuButton = ({className, clickFunction, title}) => {
     <button className={className} onClick={clickFunction}>{title}</button>
   )
 }
-const App = () => {
+const MainApp = () => {
+  const tableRedux = useSelector((state) => state.table.value)
+  const deleteTray = useSelector((state) => state.table.deleteTray)
+  const dispatch = useDispatch()
+
   const [merchants, setMerchants] = useState(false);
   const [pagenum, setpagenum] = useState(0)
   const [rows, setRows] = useState(200)
@@ -150,6 +160,9 @@ const App = () => {
   useEffect(() => {
     pageRefresh()
   }, []);
+  const addToDelete = (rownum) => {
+
+  }
   const addNewRow = () => {
 
     let fields = Object.keys(merchants[0])[0]
@@ -168,15 +181,14 @@ const App = () => {
       setTimeout(() => {
         pageRefresh()
       }, 3000);
+    setTimeout(() => {
+  console.log('Hello, World!')
+}, 3000);
     
   }
   const handleTableChange = () => {
     let tableName = prompt("Enter new table name")
     setTable(tableName)
-
-    setTimeout(() => {
-      pageRefresh()
-    }, 3000);
   }
   const pageRefresh = () => {
     fetch(`http://localhost:3001/?table=${table}&page=${pagenum}&limit=${rows}`)
@@ -184,14 +196,17 @@ const App = () => {
         return response.text();
       })
       .then(data => {
-        let merchList = (JSON.parse(data))
+        dispatch(assignTable([]))
+        let merchList = (JSON.parse(data)).reverse()
         for (let i = 0; i < merchList.length; i++) {
           merchList[i].rownum = i
+          dispatch(addRow(merchList[i]))
         }
+        
         const blankColumn =(Object.keys(merchList[0])[0])
         setBlankColumn(blankColumn)
         setMerchants(merchList.reverse());
-        console.log(merchList)
+        console.log(tableRedux)
       });
   }
   function setRowsPerPage() {
@@ -242,6 +257,7 @@ const App = () => {
     <div>
       <h1>PostgreSQL Record Manager</h1>
       Using table: {table}
+      Delete Tray: {deleteTray}
       <hr />
       <p>Page {pagenum} with {rows} rows per page</p>
       <div>
@@ -257,8 +273,16 @@ const App = () => {
         <button className = 'nav' onClick={handlePrevPage}>Previous page</button>
       </div>
       {/* <MenuButton clickFunction={() => actions.sendQuery(setMerchants)} title = "Send Query" /> */}
-      <Table itemArrayProps = {merchants} setMerchants={setMerchants} args = {args}/>
+      <Table itemArrayProps = {tableRedux} setMerchants={setMerchants} args = {args}/>
     </div>
   );
+}
+
+const App = () => {
+  return(
+    <Provider store={store}>
+      <MainApp />
+    </Provider>
+  )
 }
 export default App;
