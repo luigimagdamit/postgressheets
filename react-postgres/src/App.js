@@ -4,7 +4,7 @@ import store from './app/store'
 import { Provider } from 'react-redux'
 import { Counter } from './Counter'
 import { useSelector, useDispatch } from 'react-redux'
-import { assignTable, addRow, addToDelete } from './features/tableSlice'
+import { assignTable, addRow, addToDelete, addToNew } from './features/tableSlice'
 const routes = {
   query: "http://localhost:3001/merchants/query"
 }
@@ -86,7 +86,7 @@ const Entry = ({dataProps, setMerchants, args}) => {
   )
 }
 const Table = ({itemArrayProps, setMerchants, args}) => {
-  const itemArray = Array.from(itemArrayProps);
+  const itemArray = Array.from(itemArrayProps).reverse();
   return (
     <div>
     <table>
@@ -142,6 +142,7 @@ const MenuButton = ({className, clickFunction, title}) => {
 const MainApp = () => {
   const tableRedux = useSelector((state) => state.table.value)
   const deleteTray = useSelector((state) => state.table.deleteTray)
+  const newTray = useSelector((state) => state.table.newTray)
   const dispatch = useDispatch()
 
   const [merchants, setMerchants] = useState(false);
@@ -164,27 +165,20 @@ const MainApp = () => {
 
   }
   const addNewRow = () => {
+    let firstEntry = Object.keys(tableRedux[0])
+    console.log(firstEntry)
+    console.log("bleep")
+    let newRow = {}
 
-    let fields = Object.keys(merchants[0])[0]
-    let values = ""
-    
-    fetch('http://localhost:3001/create', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({table, fields, values}),
-    })
-      .then(response => {
-        return response.text();
-      })
-      setTimeout(() => {
-        pageRefresh()
-      }, 3000);
-    setTimeout(() => {
-  console.log('Hello, World!')
-}, 3000);
-    
+    for (const key of firstEntry) {
+      newRow[key] = ""
+    }
+    newRow = {
+      ...newRow,
+      rownum: tableRedux.length + 1
+    }
+    dispatch(addRow(newRow))
+    dispatch(addToNew(newRow.rownum))
   }
   const handleTableChange = () => {
     let tableName = prompt("Enter new table name")
@@ -197,17 +191,71 @@ const MainApp = () => {
       })
       .then(data => {
         dispatch(assignTable([]))
-        let merchList = (JSON.parse(data)).reverse()
+        let merchList = (JSON.parse(data))
         for (let i = 0; i < merchList.length; i++) {
           merchList[i].rownum = i
           dispatch(addRow(merchList[i]))
         }
+        
         
         const blankColumn =(Object.keys(merchList[0])[0])
         setBlankColumn(blankColumn)
         setMerchants(merchList.reverse());
         console.log(tableRedux)
       });
+  }
+  const commitNewRow = (row) => {
+    console.log(row)
+     let fields = Object.keys(row)
+     let values = Object.values(row)
+     fields.pop()
+     values.pop()
+     for(let i = 0; i < fields.length; i++) {
+      fields[i] = "\"" + fields[i] + "\"" 
+      values[i] = "\'" + values[i] + "\'" 
+     }
+     let bodyJSON = JSON.stringify({table, fields, values})
+     console.log(bodyJSON)
+
+     fetch('http://localhost:3001/json', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({table, fields, values}),
+    })
+  
+  }
+  const commitNewRows = () => {
+    for (let i = 0; i < newTray.length; i++) {
+      commitNewRow(newTray[i])
+    }
+  }
+  const deleteRow = (rownum) => {
+    const result = tableRedux.filter(function(row) {
+      return row.rownum === rownum
+    })
+    console.log(result[0])
+    let body = {
+      table: table,
+      key_column: keyColumn,
+      target: result[0][keyColumn]
+
+    }
+    fetch('http://localhost:3001/deleteRow', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    })
+    console.log(body)
+  }
+  const commitDeletes = () => {
+    for (let i = 0; i < deleteTray.length; i++) {
+      deleteRow(deleteTray[i])
+      console.log(deleteTray[i])
+    }
   }
   function setRowsPerPage() {
     let rowsPerPage = prompt("Enter rows per page");
@@ -229,8 +277,13 @@ const MainApp = () => {
         return response.text();
       })
       .then(data => {
+        dispatch(assignTable([]))
         let merchList = (JSON.parse(data))
         const blankColumn =(Object.keys(merchList[0])[0])
+        for (let i = 0; i < merchList.length; i++) {
+          merchList[i].rownum = i
+          dispatch(addRow(merchList[i]))
+        }
         setBlankColumn(blankColumn)
         setMerchants(merchList);
       });
@@ -245,8 +298,13 @@ const MainApp = () => {
         return response.text();
       })
       .then(data => {
+        dispatch(assignTable([]))
         let merchList = (JSON.parse(data))
         const blankColumn =(Object.keys(merchList[0])[0])
+        for (let i = 0; i < merchList.length; i++) {
+          merchList[i].rownum = i
+          dispatch(addRow(merchList[i]))
+        }
         setBlankColumn(blankColumn)
         setMerchants(merchList);
       });
@@ -257,7 +315,11 @@ const MainApp = () => {
     <div>
       <h1>PostgreSQL Record Manager</h1>
       Using table: {table}
+      New Tray: {newTray}
       Delete Tray: {deleteTray}
+      <button className = 'nav' onClick={commitDeletes}>Commit Deletion</button>
+      <button className = 'nav' onClick={addNewRow}>Add Blank Row</button>
+      <button className = 'nav' onClick={commitNewRows}>Commit New Rows</button>
       <hr />
       <p>Page {pagenum} with {rows} rows per page</p>
       <div>

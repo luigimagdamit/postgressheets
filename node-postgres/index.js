@@ -54,6 +54,21 @@ app.post('/create', (req, res) => {
     res.status(500).send(error);
   })
 })
+app.post('/json', (req, res) => {
+  console.log(req.body)
+  let fields = (req.body.fields.toString())
+  let values = (req.body.values.toString())
+  console.log(fields)
+  console.log(values)
+  merchant_model.createBlankRow(
+    {
+      table: "merchants",
+      fields: fields,
+      values: values
+    }
+
+  )
+})
 app.post('/update', (req, res) => {
   console.log(req.body)
   merchant_model.createRow(req.body)

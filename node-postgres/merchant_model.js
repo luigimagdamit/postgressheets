@@ -51,7 +51,19 @@ const getMerchants = (body) => {
   }
   const createRow = (body) => {
     return new Promise(function(resolve, reject) {
-      let q = `INSERT INTO ${body.table} ("${body.fields}") VALUES ('${body.values}')`
+      let q = `INSERT INTO ${body.table} () VALUES ()`
+      console.log(q)
+      pool.query(q, (error, results) => {
+        if (error) {
+          reject(error)
+        }
+        resolve(results.rows)
+      })
+    })
+  }
+  const createBlankRow = (body) => {
+    return new Promise(function(resolve, reject) {
+      let q = `INSERT INTO ${body.table} VALUES (NULL)`
       console.log(q)
       pool.query(q, (error, results) => {
         if (error) {
@@ -163,5 +175,6 @@ const getMerchants = (body) => {
     processQuery,
     createRow,
     searchColumn,
-    deleteRow
+    deleteRow,
+    createBlankRow
   }

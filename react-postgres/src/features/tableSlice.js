@@ -17,11 +17,14 @@ export const tableSlice = createSlice({
     },
     addToDelete: (state, action) => {
       state.deleteTray.push(action.payload)
+    },
+    addToNew: (state, action) => {
+      state.newTray.push(action.payload)
     }
   },
 })
 
 // Action creators are generated for each case reducer function
-export const { assignTable, addRow, addToDelete } = tableSlice.actions
+export const { assignTable, addRow, addToDelete, addToNew } = tableSlice.actions
 
 export default tableSlice.reducer
