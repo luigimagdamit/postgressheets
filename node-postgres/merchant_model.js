@@ -74,8 +74,10 @@ const getMerchants = (body) => {
     })
   }
   const updateRow = (body) => {
+    let q = `UPDATE ${body.table} SET ("${body.fields}") VALUES ('${body.values}')`
+    console.log(q, ["bruh", "bruh"])
     return new Promise(function(resolve, reject) {
-      let q = `INSERT INTO ${body.table} ("${body.fields}") VALUES ('${body.values}')`
+      
       console.log(q)
       pool.query(q, (error, results) => {
         if (error) {

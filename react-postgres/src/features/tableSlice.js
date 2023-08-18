@@ -4,6 +4,7 @@ export const tableSlice = createSlice({
   name: 'table',
   initialState: {
     value: [],
+    tableName: "",
     deleteTray: [],
     editTray:[],
     newTray: []
@@ -11,6 +12,18 @@ export const tableSlice = createSlice({
   reducers: {
     assignTable: (state, action) => {
       state.value = action.payload
+    },
+    assignTableName: (state, action) => {
+      state.value = action.payload
+    },
+    clearDeleteTray: (state, action) => {
+      state.deleteTray = []
+    },
+    clearNewTray: (state, action) => {
+      state.newTray = []
+    },
+    clearEditTray: (state, action) => {
+      state.editTray = []
     },
     addRow: (state, action) => {
       state.value.push(action.payload)
@@ -20,11 +33,14 @@ export const tableSlice = createSlice({
     },
     addToNew: (state, action) => {
       state.newTray.push(action.payload)
+    },
+    addToEdit: (state, action) => {
+      state.editTray.push(action.payload)
     }
   },
 })
 
 // Action creators are generated for each case reducer function
-export const { assignTable, addRow, addToDelete, addToNew } = tableSlice.actions
+export const { assignTable, assignTableName, addRow, addToDelete, addToNew, clearDeleteTray, addToEdit, clearEditTray, clearNewTray } = tableSlice.actions
 
 export default tableSlice.reducer

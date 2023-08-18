@@ -32,15 +32,6 @@ app.get('/', (req, res) => {
   })
 })
 
-app.get('/merchants/unique', (req, res) => {
-  merchant_model.addUniqueColumn()
-  .then(response => {
-    res.status(200).send(response);
-  })
-  .catch(error => {
-    res.status(500).send(error);
-  })
-})
 
 // use the req.body as the input
 // req.body will have fields like name, id, etc
@@ -62,7 +53,7 @@ app.post('/json', (req, res) => {
   console.log(values)
   merchant_model.createBlankRow(
     {
-      table: "merchants",
+      table: req.body.table,
       fields: fields,
       values: values
     }
@@ -80,26 +71,8 @@ app.post('/update', (req, res) => {
   })
 })
 // different from above function where the specific fields are inputted into the function
-app.post('/nextpage', (req, res) => {
-  console.log(req.body)
-  merchant_model.getMerchants(req.body.pagenum, req.body.rows)
-  .then(response => {
-    res.status(200).send(response);
-  })
-  .catch(error => {
-    res.status(500).send(error);
-  })
-})
-app.post('/search', (req, res) => {
-  console.log(req.body)
-  merchant_model.searchMerchants(req.body.id)
-  .then(response => {
-    res.status(200).send(response);
-  })
-  .catch(error => {
-    res.status(500).send(error);
-  })
-})
+
+
 app.post('/searchColumn', (req, res) => {
   console.log(req.body)
   merchant_model.searchColumn(req.body)
@@ -120,36 +93,9 @@ app.post('/deleteRow', (req, res) => {
     res.status(500).send(error);
   })
 })
-app.post('/merchants/update/:id', (req, res) => {
-    merchant_model.updateMerchant(req.body)
-    .then(response => {
-        res.status(200).send(response);
-    })
-  .catch(error => {
-    res.status(500).send(error);
-  })
-})
 
-app.delete('/merchants/:id', (req, res) => {
-console.log(req.params)
-  merchant_model.deleteMerchant(req.params.id)
-  .then(response => {
-    res.status(200).send(response);
-  })
-  .catch(error => {
-    res.status(500).send(error);
-  })
-})
-app.post('/merchants/query', (req, res) => {
-  console.log(req.body.query)
-    merchant_model.processQuery(req.body.query)
-    .then(response => {
-      res.status(200).send(response);
-    })
-    .catch(error => {
-      res.status(500).send(error);
-    })
-  })
+
+
 app.listen(port, () => {
   console.log(`App running on port ${port}.`)
 })

@@ -4,13 +4,15 @@ import store from './app/store'
 import { Provider } from 'react-redux'
 import { Counter } from './Counter'
 import { useSelector, useDispatch } from 'react-redux'
-import { assignTable, addRow, addToDelete, addToNew } from './features/tableSlice'
+import { assignTable, assignTableName, addRow, addToDelete, addToNew, clearDeleteTray, clearNewTray } from './features/tableSlice'
 const routes = {
   query: "http://localhost:3001/merchants/query"
 }
 
 const Entry = ({dataProps, args}) => {
+  const tableRedux = useSelector((state) => state.table.value)
   const dispatch = useDispatch()
+  console.log(args)
   useEffect(() => {
   }, [])
   const [data, setData] = useState({})
@@ -21,12 +23,16 @@ const Entry = ({dataProps, args}) => {
     setData(dataProps)
   }, [])
 
-  // function updateMerchant(id, field, newval) {
-  //   const table = args.table
-  //   const key_column = args.keyColumn
-  //   const query = `UPDATE ${table} SET "${field}" = '${newval}' WHERE "${key_column}" = '${id}';`
-  //   actions.sendQuery(setMerchants, query)
-  // }
+  function updateMerchant(id, field, newval) {
+    const table = args.table
+    const key_column = args.keyColumn
+    // const query = `UPDATE ${table} SET "${field}" = '${newval}' WHERE "${key_column}" = '${id}';`
+    // actions.sendQuery(setMerchants, query)
+    let res = tableRedux.filter((row) => {
+      return row.rownum === data.rownum
+    })
+    console.log(res)
+  }
   const deleteMerchant = () => {
     // const query = `DELETE FROM ${args.table} WHERE "${args.keyColumn}" = '${data.id}';`
 
@@ -34,24 +40,25 @@ const Entry = ({dataProps, args}) => {
     // if(confirmation === "yes"){
     //   actions.sendQuery(setMerchants, query)
     // }
+    console.log(data)
     dispatch(addToDelete(data.rownum))
     
   }
   const handleInputChange = (e, field) => {
     let newEdited = {
-      ...edited
+      ...data
     }
     newEdited[field] = e
-    setEdited(newEdited)
+    setData(newEdited)
     console.log(edited)
   }
   const onSubmit = (field) => {
     
-    // const newData = {
-    //   ...data,
-    //   ...edited
-    // }
-    // setData(newData)
+    const newData = {
+      ...data,
+      ...edited
+    }
+    setData(newData)
     // // changes are only visible after the function ends
     // //
     // const fieldsArray = (Object.keys(newData))
@@ -67,7 +74,7 @@ const Entry = ({dataProps, args}) => {
   return (
         <tr>
           <button onClick={() => console.log(data)}>Print State</button>
-          <button onClick={() => onSubmit("DAY_OF_MONTH_NUM")}>Submit Changes</button>
+          <button onClick={updateMerchant}>Update Local State</button>
           <button onClick={deleteMerchant}>Delete Item</button>
           {Object.keys(data).map((field) => (
             <td>
@@ -116,6 +123,7 @@ const MenuButton = ({className, clickFunction, title}) => {
 }
 const MainApp = () => {
   const tableRedux = useSelector((state) => state.table.value)
+  const tableName = useSelector((state) => state.table.tableName)
   const deleteTray = useSelector((state) => state.table.deleteTray)
   const newTray = useSelector((state) => state.table.newTray)
   const dispatch = useDispatch()
@@ -123,10 +131,11 @@ const MainApp = () => {
   const [merchants, setMerchants] = useState(false);
   const [pagenum, setpagenum] = useState(0)
   const [rows, setRows] = useState(200)
-  const [table, setTable] = useState("test")
+  const [table, setTable] = useState("merchants")
   const [keyColumn, setKeyColumn] = useState("id")
   const [blankColumn, setBlankColumn] = useState("id")
   const [page, setPage] = useState(0)
+  const [searchColumn, setSearchColumn] = useState("id")
   const args = {
     rows: rows,
     table: table,
@@ -135,6 +144,7 @@ const MainApp = () => {
   }
   useEffect(() => {
     pageRefresh()
+    dispatch(assignTableName(table))
   }, []);
   const addNewRow = () => {
     let firstEntry = Object.keys(tableRedux[0])
@@ -157,6 +167,7 @@ const MainApp = () => {
     setTable(tableName)
   }
   const pageRefresh = () => {
+    dispatch(assignTable([]))
     fetch(`http://localhost:3001/?table=${table}&page=${pagenum}&limit=${rows}`)
       .then(response => {
         return response.text();
@@ -174,6 +185,40 @@ const MainApp = () => {
         setBlankColumn(blankColumn)
         console.log(tableRedux)
       });
+  }
+  const searchColumns = () => {
+    let searchValue = prompt("Enter desired search value")
+    let body = {
+      table: table,
+      key_column: searchColumn,
+      value: searchValue
+    }
+    dispatch(assignTable([]))
+    fetch('http://localhost:3001/searchColumn', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    }).then(response => {
+      return response.text();
+    }).then(data => {
+      console.log(data)
+      let merchList = (JSON.parse(data))
+      if(merchList.length !== 0){
+        
+        for (let i = 0; i < merchList.length; i++) {
+          merchList[i].rownum = i
+          dispatch(addRow(merchList[i]))
+        }
+          
+          
+        const blankColumn =(Object.keys(merchList[0])[0])
+        setBlankColumn(blankColumn)
+        console.log(tableRedux)
+      }
+
+    });
   }
   const commitNewRow = (row) => {
     console.log(row)
@@ -201,6 +246,10 @@ const MainApp = () => {
     for (let i = 0; i < newTray.length; i++) {
       commitNewRow(newTray[i])
     }
+    dispatch(clearNewTray())
+    setTimeout(() => {
+      pageRefresh()
+    }, 3000);
   }
   const deleteRow = (rownum) => {
     const result = tableRedux.filter(function(row) {
@@ -227,11 +276,25 @@ const MainApp = () => {
       deleteRow(deleteTray[i])
       console.log(deleteTray[i])
     }
+    dispatch(clearDeleteTray())
+    setTimeout(() => {
+      pageRefresh()
+    }, 3000);
+  }
+  const commitAllChanges = () => {
+    commitNewRows()
+    commitDeletes()
+  }
+  const changeSearchColumn = () => {
+    let search = prompt("Assign search column")
+    setSearchColumn(search)
   }
   function setRowsPerPage() {
     let rowsPerPage = prompt("Enter rows per page");
     setRows(rowsPerPage)
-    pageRefresh()
+    setTimeout(() => {
+      pageRefresh()
+    }, 3000);
   }
   function handleNextPage() {
     let newpage = pagenum + 1
@@ -278,7 +341,10 @@ const MainApp = () => {
   return (
     <div>
       <h1>PostgreSQL Record Manager</h1>
-      
+      <button className = 'nav' onClick={() => (console.log(tableRedux))}>Print Items</button>
+      <p>Search Column: {searchColumn}</p>
+      <MenuButton clickFunction={changeSearchColumn} title = "Set Search Column"/>
+      <MenuButton clickFunction={searchColumns} title = "Search"/>
       <hr />
       <p>Page {pagenum} with {rows} rows per page</p>
       <div>
@@ -294,8 +360,10 @@ const MainApp = () => {
       <button className = 'nav' onClick={commitDeletes}>Commit Deletion</button>
       <button className = 'nav' onClick={addNewRow}>Add Blank Row</button>
       <button className = 'nav' onClick={commitNewRows}>Commit New Rows</button>
+      <button className = 'nav' onClick={commitAllChanges}>Commit All Changes</button>
       <hr />
       <p>Using table: {table}</p>
+      
       <p>New Tray: {newTray}</p>
       <p>Delete Tray: {deleteTray}</p>
       
