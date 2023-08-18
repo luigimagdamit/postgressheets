@@ -25,6 +25,10 @@ export const tableSlice = createSlice({
     clearEditTray: (state, action) => {
       state.editTray = []
     },
+    replaceEditRow: (state, action) => {
+      // ask for input that is rownum
+      state.editTray = state.editTray.filter(row => row.rownum != action.payload)
+    },
     addRow: (state, action) => {
       state.value.push(action.payload)
     },
@@ -41,6 +45,6 @@ export const tableSlice = createSlice({
 })
 
 // Action creators are generated for each case reducer function
-export const { assignTable, assignTableName, addRow, addToDelete, addToNew, clearDeleteTray, addToEdit, clearEditTray, clearNewTray } = tableSlice.actions
+export const { assignTable, assignTableName, addRow, addToDelete, addToNew, replaceEditRow, clearDeleteTray, addToEdit, clearEditTray, clearNewTray } = tableSlice.actions
 
 export default tableSlice.reducer

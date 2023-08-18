@@ -4,15 +4,15 @@ import store from './app/store'
 import { Provider } from 'react-redux'
 import { Counter } from './Counter'
 import { useSelector, useDispatch } from 'react-redux'
-import { assignTable, assignTableName, addRow, addToDelete, addToNew, clearDeleteTray, clearNewTray } from './features/tableSlice'
+import { assignTable, assignTableName, addRow, addToDelete, addToNew, addToEdit, replaceEditRow, clearDeleteTray, clearNewTray } from './features/tableSlice'
 const routes = {
   query: "http://localhost:3001/merchants/query"
 }
 
 const Entry = ({dataProps, args}) => {
   const tableRedux = useSelector((state) => state.table.value)
+  const editTray = useSelector((state) => state.table.editTray)
   const dispatch = useDispatch()
-  console.log(args)
   useEffect(() => {
   }, [])
   const [data, setData] = useState({})
@@ -23,15 +23,23 @@ const Entry = ({dataProps, args}) => {
     setData(dataProps)
   }, [])
 
-  function updateMerchant(id, field, newval) {
+  function updateMerchant() {
+    console.log(data)
     const table = args.table
     const key_column = args.keyColumn
     // const query = `UPDATE ${table} SET "${field}" = '${newval}' WHERE "${key_column}" = '${id}';`
     // actions.sendQuery(setMerchants, query)
-    let res = tableRedux.filter((row) => {
+    let res = editTray.filter((row) => {
       return row.rownum === data.rownum
     })
-    console.log(res)
+    if(res.length === 0) {
+      dispatch(addToEdit(data))
+    }
+    else {
+      dispatch(replaceEditRow(data.rownum))
+      dispatch(addToEdit(data))
+    }
+    
   }
   const deleteMerchant = () => {
     // const query = `DELETE FROM ${args.table} WHERE "${args.keyColumn}" = '${data.id}';`
@@ -50,7 +58,7 @@ const Entry = ({dataProps, args}) => {
     }
     newEdited[field] = e
     setData(newEdited)
-    console.log(edited)
+    console.log(data)
   }
   const onSubmit = (field) => {
     
@@ -73,7 +81,7 @@ const Entry = ({dataProps, args}) => {
   }
   return (
         <tr>
-          <button onClick={() => console.log(data)}>Print State</button>
+          <button onClick={() => console.log(editTray)}>Print State</button>
           <button onClick={updateMerchant}>Update Local State</button>
           <button onClick={deleteMerchant}>Delete Item</button>
           {Object.keys(data).map((field) => (
