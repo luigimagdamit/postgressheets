@@ -74,12 +74,12 @@ const getMerchants = (body) => {
     })
   }
   const updateRow = (body) => {
-    let q = `UPDATE ${body.table} SET ("${body.fields}") VALUES ('${body.values}')`
-    console.log(q, ["bruh", "bruh"])
+    let q2 = `UPDATE ${body.table} SET "${body.fields}" = '${body.values}' WHERE "${body.key_column}" = '${body.id}'`
+    console.log(q2)
     return new Promise(function(resolve, reject) {
       
-      console.log(q)
-      pool.query(q, (error, results) => {
+      console.log(q2)
+      pool.query(q2, (error, results) => {
         if (error) {
           reject(error)
         }
@@ -178,5 +178,6 @@ const getMerchants = (body) => {
     createRow,
     searchColumn,
     deleteRow,
-    createBlankRow
+    createBlankRow,
+    updateRow
   }

@@ -33,11 +33,11 @@ const Entry = ({dataProps, args}) => {
       return row.rownum === data.rownum
     })
     if(res.length === 0) {
-      dispatch(addToEdit(data))
+      dispatch(addToEdit(edited))
     }
     else {
       dispatch(replaceEditRow(data.rownum))
-      dispatch(addToEdit(data))
+      dispatch(addToEdit(edited))
     }
     
   }
@@ -54,11 +54,13 @@ const Entry = ({dataProps, args}) => {
   }
   const handleInputChange = (e, field) => {
     let newEdited = {
-      ...data
+      rownum: data.rownum,
+      id: data[args.keyColumn]
     }
     newEdited[field] = e
-    setData(newEdited)
-    console.log(data)
+    console.log(newEdited)
+    setEdited(newEdited)
+    console.log(edited)
   }
   const onSubmit = (field) => {
     
@@ -134,6 +136,7 @@ const MainApp = () => {
   const tableName = useSelector((state) => state.table.tableName)
   const deleteTray = useSelector((state) => state.table.deleteTray)
   const newTray = useSelector((state) => state.table.newTray)
+  const editTray = useSelector((state) => state.table.editTray)
   const dispatch = useDispatch()
 
   const [merchants, setMerchants] = useState(false);
@@ -259,6 +262,47 @@ const MainApp = () => {
       pageRefresh()
     }, 3000);
   }
+  const commitNewEdit = (index) => {
+    let curr = {
+      ...editTray[index]
+    }
+    delete curr.rownum
+    let fields = Object.keys(curr)
+    let values = Object.values(curr)
+
+    // for(let i = 0; i < fields.length; i++) {
+    //   fields[i] = "\"" + fields[i] + "\"" 
+    //   values[i] = "\'" + values[i] + "\'" 
+    //  }
+     console.log(fields[0])
+    let bodyJSON = JSON.stringify({table, fields, values})
+    console.log(bodyJSON)
+
+    // fetch('http://localhost:3001/update', {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //   },
+    //   body: JSON.stringify({table, fields: fields[0], values: values[0], key_column: keyColumn, id: curr[keyColumn]}),
+    // })
+    for(let i = 0; i < fields.length; i++) {
+      fetch('http://localhost:3001/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({table, fields: fields[i], values: values[i], key_column: keyColumn, id: curr[keyColumn]}),
+      })
+    }
+
+     
+  
+  }
+  const commitAllEdits = () => {
+    for (let i = 0; i < editTray.length; i++) {
+      commitNewEdit(i)
+    }
+  }
   const deleteRow = (rownum) => {
     const result = tableRedux.filter(function(row) {
       return row.rownum === rownum
@@ -366,6 +410,7 @@ const MainApp = () => {
       </div>
       <hr />
       <button className = 'nav' onClick={commitDeletes}>Commit Deletion</button>
+      <button className = 'nav' onClick={commitAllEdits}>Commit New Edits</button>
       <button className = 'nav' onClick={addNewRow}>Add Blank Row</button>
       <button className = 'nav' onClick={commitNewRows}>Commit New Rows</button>
       <button className = 'nav' onClick={commitAllChanges}>Commit All Changes</button>

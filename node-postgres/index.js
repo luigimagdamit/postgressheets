@@ -62,7 +62,7 @@ app.post('/json', (req, res) => {
 })
 app.post('/update', (req, res) => {
   console.log(req.body)
-  merchant_model.createRow(req.body)
+  merchant_model.updateRow(req.body)
   .then(response => {
     res.status(200).send(response);
   })
