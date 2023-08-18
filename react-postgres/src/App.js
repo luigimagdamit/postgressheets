@@ -2,7 +2,6 @@ import React, {useState, useEffect} from 'react';
 import './App.css';
 import store from './app/store'
 import { Provider } from 'react-redux'
-import { Counter } from './Counter'
 import { useSelector, useDispatch } from 'react-redux'
 import { assignTable, assignTableName, addRow, addToDelete, addToNew, addToEdit, replaceEditRow, clearDeleteTray, clearNewTray } from './features/tableSlice'
 const routes = {
@@ -54,6 +53,7 @@ const Entry = ({dataProps, args}) => {
   }
   const handleInputChange = (e, field) => {
     let newEdited = {
+      ...edited,
       rownum: data.rownum,
       id: data[args.keyColumn]
     }
@@ -83,7 +83,7 @@ const Entry = ({dataProps, args}) => {
   }
   return (
         <tr>
-          <button onClick={() => console.log(editTray)}>Print State</button>
+          <button onClick={() => console.log(edited)}>Print State</button>
           <button onClick={updateMerchant}>Update Local State</button>
           <button onClick={deleteMerchant}>Delete Item</button>
           {Object.keys(data).map((field) => (
@@ -102,17 +102,115 @@ const Entry = ({dataProps, args}) => {
 
   )
 }
-const Table = ({itemArrayProps, args}) => {
+
+const Column = ({rowname, args, setBlankColumn}) => {
+
+  const dispatch = useDispatch()
+  const tableRedux = useSelector((state) => state.table.value)
+  const [uniques, setUniques] = useState([])
+  const [search, setSearch] = useState("")
+  const handleSubmit = (event) => {
+    event.preventDefault()
+    console.log(search)
+    searchColumns(search)
+  }
+  const gatherUniques = (colname) => {
+    console.log("yuh")
+    let table = args.table
+    let body = {table, rowname}
+    console.log(body)
+     fetch('http://localhost:3001/filterColumn', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({table, colname}),
+    })
+    .then(response => {
+      return response.text()
+    })
+    .then(data => {
+      let uniqueList = (JSON.parse(data))
+      for(let i = 0; i < uniqueList.length; i++) {
+        console.log(uniqueList[i][rowname])
+      }
+      setUniques(uniqueList)
+    })
+  
+  }
+  const searchColumns = (colname) => {
+    let body = {
+      table: args.table,
+      key_column: rowname,
+      value: colname
+    }
+    dispatch(assignTable([]))
+    console.log(body)
+    fetch('http://localhost:3001/searchColumn', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    }).then(response => {
+      return response.text();
+    }).then(data => {
+      console.log(data)
+      let merchList = (JSON.parse(data))
+      console.log(merchList)
+      if(merchList.length !== 0){
+        
+        for (let i = 0; i < merchList.length; i++) {
+          merchList[i].rownum = i
+          dispatch(addRow(merchList[i]))
+        }
+          
+          
+        const blankColumn =(Object.keys(merchList[0])[0])
+        setBlankColumn(blankColumn)
+        console.log(tableRedux)
+      }
+
+    });
+  }
+  
+  return(
+    <div>
+      <p>{rowname}</p>
+      {
+        rowname !== "rownum" ?
+        <div class="dropdown">
+        <form onSubmit={handleSubmit}>
+          <label>
+            <input type="text" values={search} onChange={(e) => setSearch(e.target.value)} />
+          </label>
+          <input type="submit" value="Submit" />
+        </form>
+        <button className = 'nav' onClick={() => gatherUniques(rowname)}>Gather unique values</button>
+        <div class="dropdown-content">
+          {uniques.map((unique) => (
+            <p onClick={() => searchColumns(unique[rowname])}>{unique[rowname]}</p>
+          ))}
+        </div>
+      </div> :
+      null
+      }
+      
+    </div>
+  )
+}
+const Table = ({itemArrayProps, args, setBlankColumn}) => {
   const itemArray = Array.from(itemArrayProps).reverse();
   return (
     <div>
     <table>
       <tbody>
         <tr className='rownames'>
+          
           :
           {itemArray[0] ? 
             Object.keys(itemArray[0]).map((field) => (
-            <td>{field}</td>
+            <td><Column rowname = {field} args = {args} setBlankColumn={setBlankColumn}/></td>
           )) 
           : 
           null}
@@ -154,7 +252,9 @@ const MainApp = () => {
     page: pagenum
   }
   useEffect(() => {
-    pageRefresh()
+    setTimeout(() => {
+      pageRefresh()
+    }, 1000);
     dispatch(assignTableName(table))
   }, []);
   const addNewRow = () => {
@@ -232,7 +332,7 @@ const MainApp = () => {
     });
   }
   const commitNewRow = (row) => {
-    console.log(row)
+    console.log("yuh")
      let fields = Object.keys(row)
      let values = Object.values(row)
      fields.pop()
@@ -250,6 +350,12 @@ const MainApp = () => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({table, fields, values}),
+    })
+    .then(response => {
+      return response.text()
+    })
+    .then(data => {
+      alert(data)
     })
   
   }
@@ -420,7 +526,7 @@ const MainApp = () => {
       <p>New Tray: {newTray}</p>
       <p>Delete Tray: {deleteTray}</p>
       
-      <Table itemArrayProps = {tableRedux} args = {args}/>
+      <Table itemArrayProps = {tableRedux} args = {args} setBlankColumn = {setBlankColumn}/>
     </div>
   );
 }

@@ -57,7 +57,7 @@ const getMerchants = (body) => {
         if (error) {
           reject(error)
         }
-        resolve(results.rows)
+        resolve("Attempted to create row")
       })
     })
   }
@@ -69,12 +69,12 @@ const getMerchants = (body) => {
         if (error) {
           reject(error)
         }
-        resolve(results.rows)
+        resolve("Attempted to Create Blank Row")
       })
     })
   }
   const updateRow = (body) => {
-    let q2 = `UPDATE ${body.table} SET "${body.fields}" = '${body.values}' WHERE "${body.key_column}" = '${body.id}'`
+    let q2 = `UPDATE ${body.table} SET "${body.fields}" = '${body.values}' WHERE "${body.key_column}" = '${body.id}';`
     console.log(q2)
     return new Promise(function(resolve, reject) {
       
@@ -83,13 +83,25 @@ const getMerchants = (body) => {
         if (error) {
           reject(error)
         }
-        resolve(results.rows)
+        resolve("Attempted update")
       })
     })
   }
   const searchColumn = (body) => {
     return new Promise(function(resolve, reject) {
       q2 = `SELECT * FROM ${body.table} WHERE "${body.key_column}" = '${body.value}'`
+      console.log(q2)
+      pool.query(q2, (error, results) => {
+        if (error) {
+          reject(error)
+        }
+        resolve(results.rows);
+      })
+    }) 
+  }
+  const filterColumn = (body) => {
+    return new Promise(function(resolve, reject) {
+      q2 = `SELECT DISTINCT ${body.colname} FROM ${body.table}`
       console.log(q2)
       pool.query(q2, (error, results) => {
         if (error) {
@@ -163,7 +175,7 @@ const getMerchants = (body) => {
         console.log("bruh")
           reject(error)
         }
-        resolve(results.rows)
+        resolve("Deletion attempted")
       })
     })
   }
@@ -179,5 +191,6 @@ const getMerchants = (body) => {
     searchColumn,
     deleteRow,
     createBlankRow,
-    updateRow
+    updateRow,
+    filterColumn
   }

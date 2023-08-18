@@ -83,6 +83,16 @@ app.post('/searchColumn', (req, res) => {
     res.status(500).send(error);
   })
 })
+app.post('/filterColumn', (req, res) => {
+  console.log(req.body)
+  merchant_model.filterColumn(req.body)
+  .then(response => {
+    res.status(200).send(response);
+  })
+  .catch(error => {
+    res.status(500).send(error);
+  })
+})
 app.post('/deleteRow', (req, res) => {
   console.log(req.body)
   merchant_model.deleteRow(req.body)
