@@ -180,13 +180,13 @@ const Column = ({rowname, args, setBlankColumn}) => {
       {
         rowname !== "rownum" ?
         <div class="dropdown">
-        <form onSubmit={handleSubmit}>
+        <form onMouseEnter={() => gatherUniques(rowname)} onSubmit={handleSubmit}>
           <label>
             <input type="text" values={search} onChange={(e) => setSearch(e.target.value)} />
           </label>
           <input type="submit" value="Submit" />
         </form>
-        <button className = 'nav' onClick={() => gatherUniques(rowname)}>Gather unique values</button>
+        {/* <button className = 'nav' onClick={() => gatherUniques(rowname)}>Gather unique values</button> */}
         <div class="dropdown-content">
           {uniques.map((unique) => (
             <p onClick={() => searchColumns(unique[rowname])}>{unique[rowname]}</p>

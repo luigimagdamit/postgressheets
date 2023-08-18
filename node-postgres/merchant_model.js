@@ -89,7 +89,7 @@ const getMerchants = (body) => {
   }
   const searchColumn = (body) => {
     return new Promise(function(resolve, reject) {
-      q2 = `SELECT * FROM ${body.table} WHERE "${body.key_column}" = '${body.value}'`
+      q2 = `SELECT * FROM "${body.table}" WHERE "${body.key_column}" = '${body.value}'`
       console.log(q2)
       pool.query(q2, (error, results) => {
         if (error) {
@@ -101,7 +101,7 @@ const getMerchants = (body) => {
   }
   const filterColumn = (body) => {
     return new Promise(function(resolve, reject) {
-      q2 = `SELECT DISTINCT ${body.colname} FROM ${body.table}`
+      q2 = `SELECT DISTINCT "${body.colname}" FROM ${body.table}`
       console.log(q2)
       pool.query(q2, (error, results) => {
         if (error) {
