@@ -44,7 +44,7 @@ td {
 }
 
 button {
-  background-color: #5a5a5a; /* Green */
+  background-color: grey; /* Green */
   border: none;
   color: white;
   padding: 8px 16px;
@@ -55,26 +55,46 @@ button {
   font-size: 12px;
 }
 .rownames {
-  background-color: rgb(212, 212, 212);
-  color: #606060;
   font-style: italic;
 }
-
+.table {
+  border-color: grey;
+  border-style: solid;
+}
 .delete {
   background-color: rgb(230, 58, 58);
 }
-.nav {
-  background-color: rgb(42, 42, 242);
+#addRow {
+  margin-left: 600px;
 }
-
+.nav {
+  background-color: white;
+  color: black;
+  border-radius: 10px;
+  border-style: solid;
+  border-color: black;
+}
+.navButtons {
+  background-color: white;
+  color: black;
+}
+.rpp {
+  background-color: white;
+  color: black;
+  border-radius: 10px;
+  border-color: black;
+  border-style: solid;
+}
 .update {
   background-color: #4CAF50; /* Green */
 }
 
  /* Dropdown Button */
  .dropbtn {
-  background-color: #04AA6D;
-  color: white;
+  width: 200px;
+  background-color: #d3d3d3;
+  border-radius: 10px;
+  color: black;
   padding: 16px;
   font-size: 16px;
   border: none;

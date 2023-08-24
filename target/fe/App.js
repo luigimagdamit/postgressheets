@@ -55,25 +55,6 @@ const Entry = ({dataProps, args}) => {
     console.log(edited)
     updateMerchant()
   }
-  const onSubmit = (field) => {
-    
-    const newData = {
-      ...data,
-      ...edited
-    }
-    setData(newData)
-    // // changes are only visible after the function ends
-    // //
-    // const fieldsArray = (Object.keys(newData))
-    // const valuesArray = Object.values(newData)
-
-    // // send a new update request for every item in the arrays
-    // for (let i = 0; i < fieldsArray.length; i++) {
-    //   updateMerchant(data.id, fieldsArray[i], valuesArray[i])
-    // }
-    // alert("Attempted update");
-    // // NEED TO DO UPSERT IN SERVER FUNCTION
-  }
   const styles = {
     edit: {
       background: "orange"
@@ -89,8 +70,7 @@ const Entry = ({dataProps, args}) => {
     }
   }
   return (
-        <tr style={styles[newTray.includes(data.rownum) ? styles.new : status]}>
-          <button onClick={() => console.log(edited)}>Print State</button>
+        <tr onClick={() => console.log(edited)} style={styles[newTray.includes(data.rownum) ? styles.new : status]}>
           <button onClick={updateMerchant}>Update Local State</button>
           <button onClick={deleteMerchant}>Delete Item</button>
           {Object.keys(data).map((field) => (
@@ -191,7 +171,6 @@ const Column = ({rowname, args, setBlankColumn}) => {
           <label>
             <input type="text" values={search} onChange={(e) => setSearch(e.target.value)} />
           </label>
-          <input type="submit" value="Submit" />
         </form>
         {/* <button className = 'nav' onClick={() => gatherUniques(rowname)}>Gather unique values</button> */}
         <div class="dropdown-content">
@@ -210,7 +189,7 @@ const Table = ({itemArrayProps, args, setBlankColumn}) => {
   const itemArray = Array.from(itemArrayProps).reverse();
   return (
     <div>
-    <table>
+    <table className = 'table'>
       <tbody>
         <tr className='rownames'>
           
@@ -260,6 +239,7 @@ const MainApp = () => {
   const [blankColumn, setBlankColumn] = useState("id")
   const [page, setPage] = useState(0)
   const [searchColumn, setSearchColumn] = useState("id")
+  const [time, setTime] = useState("")
   const args = {
     rows: rows,
     table: table,
@@ -270,6 +250,7 @@ const MainApp = () => {
     setTimeout(() => {
       pageRefresh()
       getTables()
+      getTime()
     }, 1000);
     dispatch(assignTableName(table))
   }, []);
@@ -315,6 +296,7 @@ const MainApp = () => {
     setTable(tableName)
   }
   const pageRefresh = () => {
+    getTime()
     dispatch(assignTable([]))
     fetch(`http://localhost:3001/?table=${table}&page=${pagenum}&limit=${rows}`)
       .then(response => {
@@ -420,21 +402,10 @@ const MainApp = () => {
     let fields = Object.keys(curr)
     let values = Object.values(curr)
 
-    // for(let i = 0; i < fields.length; i++) {
-    //   fields[i] = "\"" + fields[i] + "\"" 
-    //   values[i] = "\'" + values[i] + "\'" 
-    //  }
      console.log(fields[0])
     let bodyJSON = JSON.stringify({table, fields, values})
     console.log(bodyJSON)
 
-    // fetch('http://localhost:3001/update', {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //   },
-    //   body: JSON.stringify({table, fields: fields[0], values: values[0], key_column: keyColumn, id: curr[keyColumn]}),
-    // })
     for(let i = 0; i < fields.length; i++) {
       fetch('http://localhost:3001/update', {
         method: 'POST',
@@ -484,9 +455,15 @@ const MainApp = () => {
     }, 3000);
   }
   const commitAllChanges = () => {
-    commitNewRows()
-    commitDeletes()
-    commitAllEdits()
+    if (newTray.length != 0) {
+      commitNewRows()
+    }
+    if (deleteTray.length != 0) {
+      commitDeletes()
+    }
+    if (editTray.length != 0) {
+      commitAllEdits()
+    }
   }
   const changeSearchColumn = () => {
     let search = prompt("Assign search column")
@@ -552,28 +529,47 @@ const MainApp = () => {
       });
     }
   }
-
+  const getTime = () => {
+    var today = new Date();
+    var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+    setTime(time)
+  }
   return (
     <div>
-      <h1>PostgreSQL Record Manager</h1> 
       <div class="dropdown" onMouseEnter={getTables}>
-        <button class="dropbtn">{table}</button>
+        <button class="dropbtn">Switch Table ▼</button>
         <div class="dropdown-content">
           {tableList.map((tableName) => (
             <TableButton tableName = {tableName} changeTableFunc = {setTable}/>
           ))}
         </div>
       </div>
-      
-      <MenuButton clickFunction={pageRefresh} title = "Page Refresh"/>
+
+      <MenuButton className = 'nav' clickFunction={pageRefresh} title = "Page Refresh"/>
+      <p>Table Name: {table}</p>
+      <p>Last Refresh: {time}</p>
      
       <p>Page {pagenum} with {rows} rows per page</p> <div> 
       </div>
       <hr />
-      <button className = 'nav' onClick={commitDeletes}>Commit Deletion</button>
-      <button className = 'nav' onClick={commitAllEdits}>Commit New Edits</button>
+      {/*
+      <div>
+        <h2>Legend</h2>
+        <p>All cells are editable.</p>
+        <p>Once you start editing, the row being edited will be highlighted yellow</p>
+        <p>Selecting delete will highlight the row as red</p>
+      </div>
+      <div>
+        <h2>Constraints</h2>
+        <p>User should not be allowed to save an empty row (after insertion) - a popup will br thrown as an error</p>
+        <p></p>
+        <p>Selecting delete will highlight the row as red</p>
+      </div>
+      */}
+      {/*<button className = 'nav' onClick={commitDeletes}>Commit Deletion</button> */}
+      {/*<button className = 'nav' onClick={commitAllEdits}>Commit New Edits</button> */}
       <button className = 'nav' onClick={addNewRow}>Add Blank Row</button>
-      <button className = 'nav' onClick={commitNewRows}>Commit New Rows</button>
+      {/*<button className = 'nav' onClick={commitNewRows}>Commit New Rows</button>*/}
       <button className = 'nav' onClick={commitAllChanges}>Commit All Changes</button>
       <hr />
       
@@ -581,14 +577,10 @@ const MainApp = () => {
       {/* <p>New Tray: {newTray}</p>
       <p>Delete Tray: {deleteTray}</p> */}
       <div>
-        <p>Using table: {table}</p>
-        <MenuButton clickFunction={handleTableChange} title = "Change Table"/>
-      </div>
-      <div>
         
-        <button className = 'nav' onClick={handlePrevPage}>◀ Previous</button>
-        <button onClick={setRowsPerPage}>Set Rows Per Page</button>
-        <button className = 'nav' onClick={handleNextPage}>Next ▶</button>
+        <button className = 'navButtons' onClick={handlePrevPage}>◀ Previous</button>
+        <button className = 'rpp' onClick={setRowsPerPage}>Set Rows Per Page</button>
+        <button className = 'navButtons' onClick={handleNextPage}>Next ▶</button>
       </div>
       <Table itemArrayProps = {tableRedux} args = {args} setBlankColumn = {setBlankColumn}/>
     </div>
