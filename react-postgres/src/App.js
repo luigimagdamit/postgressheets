@@ -89,8 +89,7 @@ const Entry = ({dataProps, args}) => {
     }
   }
   return (
-        <tr style={styles[newTray.includes(data.rownum) ? styles.new : status]}>
-          <button onClick={() => console.log(edited)}>Print State</button>
+        <tr onClick={() => console.log(edited)} style={styles[newTray.includes(data.rownum) ? styles.new : status]}>
           <button onClick={updateMerchant}>Update Local State</button>
           <button onClick={deleteMerchant}>Delete Item</button>
           {Object.keys(data).map((field) => (
@@ -557,7 +556,7 @@ const MainApp = () => {
     <div>
       <h1>PostgreSQL Record Manager</h1> 
       <div class="dropdown" onMouseEnter={getTables}>
-        <button class="dropbtn">{table}</button>
+        <button class="dropbtn">{table + "\t\t"} ▼</button>
         <div class="dropdown-content">
           {tableList.map((tableName) => (
             <TableButton tableName = {tableName} changeTableFunc = {setTable}/>
@@ -580,10 +579,6 @@ const MainApp = () => {
       
       {/* <p>New Tray: {newTray}</p>
       <p>Delete Tray: {deleteTray}</p> */}
-      <div>
-        <p>Using table: {table}</p>
-        <MenuButton clickFunction={handleTableChange} title = "Change Table"/>
-      </div>
       <div>
         
         <button className = 'nav' onClick={handlePrevPage}>◀ Previous</button>

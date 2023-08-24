@@ -555,25 +555,20 @@ const MainApp = () => {
 
   return (
     <div>
-      <h1>PostgreSQL Record Manager</h1>
-      <button className = 'nav' onClick={() => (console.log(tableRedux))}>Print Items</button>
-      <p>Search Column: {searchColumn}</p>
-      <MenuButton clickFunction={changeSearchColumn} title = "Set Search Column"/>
-      <MenuButton clickFunction={searchColumns} title = "Search"/>
-      <MenuButton clickFunction={getTables} title = "GET TABLES"/>
-      <p>Page {pagenum} with {rows} rows per page</p> <div> <MenuButton clickFunction={pageRefresh} title = "Page Refresh"/>
+      <h1>PostgreSQL Record Manager</h1> 
+      <div class="dropdown" onMouseEnter={getTables}>
+        <button class="dropbtn">{table}</button>
+        <div class="dropdown-content">
+          {tableList.map((tableName) => (
+            <TableButton tableName = {tableName} changeTableFunc = {setTable}/>
+          ))}
+        </div>
       </div>
       
-         <div class="dropdown" onMouseEnter={getTables}>
-          <button class="dropbtn">Tables</button>
-          <div class="dropdown-content">
-            
-            {tableList.map((tableName) => (
-              <TableButton tableName = {tableName} changeTableFunc = {setTable}/>
-          ))}
-          </div>
-        </div>
-      
+      <MenuButton clickFunction={pageRefresh} title = "Page Refresh"/>
+     
+      <p>Page {pagenum} with {rows} rows per page</p> <div> 
+      </div>
       <hr />
       <button className = 'nav' onClick={commitDeletes}>Commit Deletion</button>
       <button className = 'nav' onClick={commitAllEdits}>Commit New Edits</button>

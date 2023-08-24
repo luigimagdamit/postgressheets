@@ -44,7 +44,7 @@ td {
 }
 
 button {
-  background-color: #5a5a5a; /* Green */
+  background-color: grey; /* Green */
   border: none;
   color: white;
   padding: 8px 16px;
@@ -73,8 +73,9 @@ button {
 
  /* Dropdown Button */
  .dropbtn {
-  background-color: #04AA6D;
-  color: white;
+  width: 200px;
+  background-color: #d3d3d3;
+  color: black;
   padding: 16px;
   font-size: 16px;
   border: none;
