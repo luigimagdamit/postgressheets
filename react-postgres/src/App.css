@@ -55,18 +55,36 @@ button {
   font-size: 12px;
 }
 .rownames {
-  background-color: rgb(212, 212, 212);
-  color: #606060;
   font-style: italic;
 }
-
+.table {
+  border-color: grey;
+  border-style: solid;
+}
 .delete {
   background-color: rgb(230, 58, 58);
 }
-.nav {
-  background-color: rgb(42, 42, 242);
+#addRow {
+  margin-left: 600px;
 }
-
+.nav {
+  background-color: white;
+  color: black;
+  border-radius: 10px;
+  border-style: solid;
+  border-color: black;
+}
+.navButtons {
+  background-color: white;
+  color: black;
+}
+.rpp {
+  background-color: white;
+  color: black;
+  border-radius: 10px;
+  border-color: black;
+  border-style: solid;
+}
 .update {
   background-color: #4CAF50; /* Green */
 }
@@ -75,6 +93,7 @@ button {
  .dropbtn {
   width: 200px;
   background-color: #d3d3d3;
+  border-radius: 10px;
   color: black;
   padding: 16px;
   font-size: 16px;
