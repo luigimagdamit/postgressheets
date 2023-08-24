@@ -231,6 +231,13 @@ const Table = ({itemArrayProps, args, setBlankColumn}) => {
   )
 }
 
+const TableButton = ({tableName, changeTableFunc}) => {
+  return(
+    <div>
+      <a onClick={() => changeTableFunc(tableName)}>{tableName}</a>
+    </div>
+  )
+}
 const MenuButton = ({className, clickFunction, title}) => {
   return (
     <button className={className} onClick={clickFunction}>{title}</button>
@@ -243,7 +250,8 @@ const MainApp = () => {
   const newTray = useSelector((state) => state.table.newTray)
   const editTray = useSelector((state) => state.table.editTray)
   const dispatch = useDispatch()
-
+  
+  const [tableList, setTableList] = useState([])
   const [merchants, setMerchants] = useState(false);
   const [pagenum, setpagenum] = useState(0)
   const [rows, setRows] = useState(200)
@@ -261,9 +269,32 @@ const MainApp = () => {
   useEffect(() => {
     setTimeout(() => {
       pageRefresh()
+      getTables()
     }, 1000);
     dispatch(assignTableName(table))
   }, []);
+
+  const getTables = () => {
+    fetch('http://localhost:3001/getTables/')
+      .then(response => {
+        return response.text()
+      })
+      .then(data => {
+        console.log(data)
+        let merchList = (JSON.parse(data))
+        console.log(merchList)
+        let tableList = []
+        if(merchList.length !== 0) {
+        for(let i = 0; i < merchList.length; i++) {
+          tableList.push(merchList[i].table_name)
+        }
+        console.log(tableList)
+        setTableList(tableList)
+
+      }
+              
+    })
+  }
   const addNewRow = () => {
     let firstEntry = Object.keys(tableRedux[0])
     console.log(firstEntry)
@@ -275,8 +306,7 @@ const MainApp = () => {
     }
     newRow = {
       ...newRow,
-      rownum: tableRedux.length + 1
-    }
+      rownum: tableRedux.length + 1 }
     dispatch(addToNew(newRow.rownum))
     dispatch(addRow(newRow))
   }
@@ -530,13 +560,19 @@ const MainApp = () => {
       <p>Search Column: {searchColumn}</p>
       <MenuButton clickFunction={changeSearchColumn} title = "Set Search Column"/>
       <MenuButton clickFunction={searchColumns} title = "Search"/>
-      <hr />
-      <p>Page {pagenum} with {rows} rows per page</p>
-      <div>
-        
-        <MenuButton clickFunction={pageRefresh} title = "Page Refresh"/>
+      <MenuButton clickFunction={getTables} title = "GET TABLES"/>
+      <p>Page {pagenum} with {rows} rows per page</p> <div> <MenuButton clickFunction={pageRefresh} title = "Page Refresh"/>
       </div>
       
+         <div class="dropdown" onMouseEnter={getTables}>
+          <button class="dropbtn">Tables</button>
+          <div class="dropdown-content">
+            
+            {tableList.map((tableName) => (
+              <TableButton tableName = {tableName} changeTableFunc = {setTable}/>
+          ))}
+          </div>
+        </div>
       
       <hr />
       <button className = 'nav' onClick={commitDeletes}>Commit Deletion</button>

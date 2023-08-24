@@ -24,6 +24,20 @@ const addUniqueColumn = () => {
     })
   }) 
 }
+
+const getTables = () => {
+ return new Promise(function(resolve, reject) {
+    
+    q2 = `SELECT table_name FROM information_schema.tables WHERE table_schema='public'`
+    console.log(q2)
+    pool.query(q2, (error, results) => {
+      if (error) {
+        reject(error)
+      }
+      resolve(results.rows);
+    })
+  })
+}
 const processQuery = (query) => {
   return new Promise(function(resolve, reject) {
     
@@ -192,5 +206,6 @@ const getMerchants = (body) => {
     deleteRow,
     createBlankRow,
     updateRow,
-    filterColumn
+    filterColumn,
+    getTables 
   }
