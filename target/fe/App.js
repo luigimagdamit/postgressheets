@@ -70,9 +70,12 @@ const Entry = ({dataProps, args}) => {
     }
   }
   return (
-        <tr onClick={() => console.log(edited)} style={styles[newTray.includes(data.rownum) ? styles.new : status]}>
-          <button onClick={updateMerchant}>Update Local State</button>
-          <button onClick={deleteMerchant}>Delete Item</button>
+      <tr onClick={() => console.log(edited)} style={styles[newTray.includes(data.rownum) ? styles.new : status]}>
+      
+      <td>
+        <button onClick={updateMerchant}>Update Local State</button>
+        <button onClick={deleteMerchant}>Delete Item</button>
+      </td>
           {Object.keys(data).map((field) => (
             <td>
               <div 
@@ -422,6 +425,9 @@ const MainApp = () => {
   const commitAllEdits = () => {
     for (let i = 0; i < editTray.length; i++) {
       commitNewEdit(i)
+      setTimeout(() => {
+        pageRefresh()
+      }, 3000);
     }
   }
   const deleteRow = (rownum) => {
@@ -464,6 +470,7 @@ const MainApp = () => {
     if (editTray.length != 0) {
       commitAllEdits()
     }
+    alert("Changes have been saved to the database.")
   }
   const changeSearchColumn = () => {
     let search = prompt("Assign search column")

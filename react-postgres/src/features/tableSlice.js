@@ -40,11 +40,17 @@ export const tableSlice = createSlice({
     },
     addToEdit: (state, action) => {
       state.editTray.push(action.payload)
+    },
+    removeFromDelete: (state, action) => {
+      return {
+        ...state,
+        deleteTray: state.deleteTray.filter(item => item !== action.payload)
+      }
     }
   },
 })
 
 // Action creators are generated for each case reducer function
-export const { assignTable, assignTableName, addRow, addToDelete, addToNew, replaceEditRow, clearDeleteTray, addToEdit, clearEditTray, clearNewTray } = tableSlice.actions
+export const { assignTable, assignTableName, addRow, addToDelete, addToNew, replaceEditRow, clearDeleteTray, addToEdit, clearEditTray, clearNewTray, removeFromDelete } = tableSlice.actions
 
 export default tableSlice.reducer

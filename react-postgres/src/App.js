@@ -3,13 +3,16 @@ import './App.css';
 import store from './app/store'
 import { Provider } from 'react-redux'
 import { useSelector, useDispatch } from 'react-redux'
-import { assignTable, assignTableName, addRow, addToDelete, addToNew, addToEdit, replaceEditRow, clearDeleteTray, clearNewTray } from './features/tableSlice'
+import { assignTable, assignTableName, addRow, addToDelete, addToNew, addToEdit, replaceEditRow, clearDeleteTray, clearNewTray, clearEditTray, removeFromDelete } from './features/tableSlice'
 
 const Entry = ({dataProps, args}) => {
   const editTray = useSelector((state) => state.table.editTray)
   const newTray = useSelector((state) => state.table.newTray)
+  
+  const deleteTray = useSelector((state) => state.table.deleteTray)
   const dispatch = useDispatch()
   useEffect(() => {
+
   }, [])
   const [data, setData] = useState({})
   const [edited, setEdited] = useState({})
@@ -21,6 +24,10 @@ const Entry = ({dataProps, args}) => {
     setData(dataProps)
     console.log(newTray.includes(dataProps.rownum))
   }, [])
+
+  useEffect(() => {
+    updateMerchant()
+  }, [edited])
 
   function updateMerchant() {
     console.log(data)
@@ -34,14 +41,20 @@ const Entry = ({dataProps, args}) => {
       dispatch(replaceEditRow(data.rownum))
       dispatch(addToEdit(edited))
     }
-    setStatus("edit")
     
   }
   const deleteMerchant = () => {
-    console.log(data)
-    setStatus("delete")
-    dispatch(addToDelete(data.rownum))
-    
+    console.log(deleteTray)
+    if(status === "delete") {
+      setStatus("default")
+      console.log("ye")
+      dispatch(removeFromDelete(data.rownum))
+    }
+    else {
+      console.log(data)
+      setStatus("delete")
+      dispatch(addToDelete(data.rownum))
+    }
   }
   const handleInputChange = (e, field) => {
     let newEdited = {
@@ -52,15 +65,17 @@ const Entry = ({dataProps, args}) => {
     newEdited[field] = e
     console.log(newEdited)
     setEdited(newEdited)
+    // error because this is not accurate until next call
     console.log(edited)
-    updateMerchant()
+
+    setStatus("edit")
   }
   const styles = {
     edit: {
-      background: "orange"
+      background: "#FAC898"
     },
     delete: {
-      background: "red"
+      background: "#FF5733"
     },
     new: {
       background: "green"
@@ -73,8 +88,10 @@ const Entry = ({dataProps, args}) => {
       <tr onClick={() => console.log(edited)} style={styles[newTray.includes(data.rownum) ? styles.new : status]}>
       
       <td>
-        <button onClick={updateMerchant}>Update Local State</button>
-        <button onClick={deleteMerchant}>Delete Item</button>
+        {/*<button onClick={updateMerchant}>Update Local State</button>*/}
+        <input onClick={deleteMerchant}type="checkbox"/>
+        <p>Delete </p>
+        <img style={{width: "20px", height: "20px"}} src = {require("./IMG_3061.jpg")} />
       </td>
           {Object.keys(data).map((field) => (
             <td>
@@ -392,7 +409,6 @@ const MainApp = () => {
     for (let i = 0; i < newTray.length; i++) {
       commitNewRow(newTray[i])
     }
-    dispatch(clearNewTray())
     setTimeout(() => {
       pageRefresh()
     }, 3000);
@@ -455,7 +471,6 @@ const MainApp = () => {
       deleteRow(deleteTray[i])
       console.log(deleteTray[i])
     }
-    dispatch(clearDeleteTray())
     setTimeout(() => {
       pageRefresh()
     }, 3000);
@@ -470,6 +485,11 @@ const MainApp = () => {
     if (editTray.length != 0) {
       commitAllEdits()
     }
+
+    dispatch(clearNewTray())
+
+    dispatch(clearDeleteTray())
+    dispatch(clearEditTray())
     alert("Changes have been saved to the database.")
   }
   const changeSearchColumn = () => {
@@ -544,7 +564,7 @@ const MainApp = () => {
   return (
     <div>
       <div class="dropdown" onMouseEnter={getTables}>
-        <button class="dropbtn">Switch Table ▼</button>
+        <button class="dropbtn">{table}▼</button>
         <div class="dropdown-content">
           {tableList.map((tableName) => (
             <TableButton tableName = {tableName} changeTableFunc = {setTable}/>
