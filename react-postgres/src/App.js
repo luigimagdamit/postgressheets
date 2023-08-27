@@ -5,6 +5,8 @@ import { Provider } from 'react-redux'
 import { useSelector, useDispatch } from 'react-redux'
 import { assignTable, assignTableName, addRow, addToDelete, addToNew, addToEdit, replaceEditRow, clearDeleteTray, clearNewTray, clearEditTray, removeFromDelete } from './features/tableSlice'
 
+const backend = "http://localhost:3001"
+
 const Entry = ({dataProps, args}) => {
   const editTray = useSelector((state) => state.table.editTray)
   const newTray = useSelector((state) => state.table.newTray)
@@ -126,7 +128,7 @@ const Column = ({rowname, args, setBlankColumn}) => {
     let table = args.table
     let body = {table, rowname}
     console.log(body)
-     fetch('http://localhost:3001/filterColumn', {
+     fetch(`${backend}/filterColumn`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -153,7 +155,7 @@ const Column = ({rowname, args, setBlankColumn}) => {
     }
     dispatch(assignTable([]))
     console.log(body)
-    fetch('http://localhost:3001/searchColumn', {
+    fetch(`${backend}/searchColumn`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -276,7 +278,7 @@ const MainApp = () => {
   }, []);
 
   const getTables = () => {
-    fetch('http://localhost:3001/getTables/')
+    fetch(`${backend}/getTables/`)
       .then(response => {
         return response.text()
       })
@@ -311,14 +313,10 @@ const MainApp = () => {
     dispatch(addToNew(newRow.rownum))
     dispatch(addRow(newRow))
   }
-  const handleTableChange = () => {
-    let tableName = prompt("Enter new table name")
-    setTable(tableName)
-  }
   const pageRefresh = () => {
     getTime()
     dispatch(assignTable([]))
-    fetch(`http://localhost:3001/?table=${table}&page=${pagenum}&limit=${rows}`)
+    fetch(`${backend}/?table=${table}&page=${pagenum}&limit=${rows}`)
       .then(response => {
         return response.text();
       })
@@ -343,40 +341,7 @@ const MainApp = () => {
         
       });
   }
-  const searchColumns = () => {
-    let searchValue = prompt("Enter desired search value")
-    let body = {
-      table: table,
-      key_column: searchColumn,
-      value: searchValue
-    }
-    dispatch(assignTable([]))
-    fetch('http://localhost:3001/searchColumn', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-    }).then(response => {
-      return response.text();
-    }).then(data => {
-      console.log(data)
-      let merchList = (JSON.parse(data))
-      if(merchList.length !== 0){
-        
-        for (let i = 0; i < merchList.length; i++) {
-          merchList[i].rownum = i
-          dispatch(addRow(merchList[i]))
-        }
-          
-          
-        const blankColumn =(Object.keys(merchList[0])[0])
-        setBlankColumn(blankColumn)
-        console.log(tableRedux)
-      }
-
-    });
-  }
+  
   const commitNewRow = (row) => {
     console.log("yuh")
      let fields = Object.keys(row)
@@ -390,7 +355,7 @@ const MainApp = () => {
      let bodyJSON = JSON.stringify({table, fields, values})
      console.log(bodyJSON)
 
-     fetch('http://localhost:3001/json', {
+     fetch(`${backend}/json`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -426,7 +391,7 @@ const MainApp = () => {
     console.log(bodyJSON)
 
     for(let i = 0; i < fields.length; i++) {
-      fetch('http://localhost:3001/update', {
+      fetch(`${backend}/update`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -457,7 +422,7 @@ const MainApp = () => {
       target: result[0][keyColumn]
 
     }
-    fetch('http://localhost:3001/deleteRow', {
+    fetch(`${backend}/deleteRow`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -507,7 +472,7 @@ const MainApp = () => {
     let newpage = pagenum + 1
     
 
-    fetch(`http://localhost:3001/?table=${table}&page=${newpage}&limit=${rows}`)
+    fetch(`${backend}/?table=${table}&page=${newpage}&limit=${rows}`)
       .then(response => {
         return response.text();
       })
@@ -540,7 +505,7 @@ const MainApp = () => {
     let newpage = pagenum - 1
     if (newpage >= 0){
       setpagenum(newpage)
-      fetch(`http://localhost:3001/?table=${table}&page=${newpage}&limit=${rows}`)
+      fetch(`${backend}/?table=${table}&page=${newpage}&limit=${rows}`)
       .then(response => {
         return response.text();
       })
