@@ -5,12 +5,12 @@ import { Provider } from 'react-redux'
 import { useSelector, useDispatch } from 'react-redux'
 import { assignTable, assignTableName, addRow, addToDelete, addToNew, addToEdit, replaceEditRow, clearDeleteTray, clearNewTray, clearEditTray, removeFromDelete } from './features/tableSlice'
 
-const backend = "http://localhost:3001"
+const port = "3001"
+const backend = `http://localhost:${port}`
 
 const Entry = ({dataProps, args}) => {
   const editTray = useSelector((state) => state.table.editTray)
   const newTray = useSelector((state) => state.table.newTray)
-  
   const deleteTray = useSelector((state) => state.table.deleteTray)
   const dispatch = useDispatch()
   useEffect(() => {
@@ -89,7 +89,7 @@ const Entry = ({dataProps, args}) => {
   return (
       <tr onClick={() => console.log(edited)} style={styles[newTray.includes(data.rownum) ? styles.new : status]}>
       
-      <td>
+      <td onClick={() => console.log(data)}>
         {/*<button onClick={updateMerchant}>Update Local State</button>*/}
         <input onClick={deleteMerchant}type="checkbox"/>
         <p>Delete </p>
@@ -259,8 +259,6 @@ const MainApp = () => {
   const [table, setTable] = useState("merchants")
   const [keyColumn, setKeyColumn] = useState("id")
   const [blankColumn, setBlankColumn] = useState("id")
-  const [page, setPage] = useState(0)
-  const [searchColumn, setSearchColumn] = useState("id")
   const [time, setTime] = useState("")
   const args = {
     rows: rows,
@@ -269,12 +267,6 @@ const MainApp = () => {
     page: pagenum
   }
   useEffect(() => {
-    setTimeout(() => {
-      pageRefresh()
-      getTables()
-      getTime()
-    }, 1000);
-    dispatch(assignTableName(table))
   }, []);
 
   const getTables = () => {
@@ -324,6 +316,7 @@ const MainApp = () => {
         if(data !== []) {
           dispatch(assignTable([]))
           let merchList = (JSON.parse(data))
+          merchList.sort((a, b) => (a[blankColumn]> b[blankColumn]) ? 1 : -1)
           if (merchList.length !== 0) {
             for (let i = 0; i < merchList.length; i++) {
               merchList[i].rownum = i
@@ -374,9 +367,6 @@ const MainApp = () => {
     for (let i = 0; i < newTray.length; i++) {
       commitNewRow(newTray[i])
     }
-    setTimeout(() => {
-      pageRefresh()
-    }, 3000);
   }
   const commitNewEdit = (index) => {
     let curr = {
@@ -406,9 +396,6 @@ const MainApp = () => {
   const commitAllEdits = () => {
     for (let i = 0; i < editTray.length; i++) {
       commitNewEdit(i)
-      setTimeout(() => {
-        pageRefresh()
-      }, 3000);
     }
   }
   const deleteRow = (rownum) => {
@@ -436,9 +423,6 @@ const MainApp = () => {
       deleteRow(deleteTray[i])
       console.log(deleteTray[i])
     }
-    setTimeout(() => {
-      pageRefresh()
-    }, 3000);
   }
   const commitAllChanges = () => {
     if (newTray.length != 0) {
@@ -455,18 +439,15 @@ const MainApp = () => {
 
     dispatch(clearDeleteTray())
     dispatch(clearEditTray())
+    setTimeout(() => {
+      pageRefresh()
+    }, 3000)
+
     alert("Changes have been saved to the database.")
-  }
-  const changeSearchColumn = () => {
-    let search = prompt("Assign search column")
-    setSearchColumn(search)
   }
   function setRowsPerPage() {
     let rowsPerPage = prompt("Enter rows per page");
     setRows(rowsPerPage)
-    setTimeout(() => {
-      pageRefresh()
-    }, 3000);
   }
   function handleNextPage() {
     let newpage = pagenum + 1
@@ -480,7 +461,10 @@ const MainApp = () => {
         console.log(data)
         if(data !== []) {
           
+          
           let merchList = (JSON.parse(data))
+          
+          merchList.sort((a, b) => (a[blankColumn]> b[blankColumn]) ? 1 : -1)
           if(merchList.length !== 0) {
             dispatch(assignTable([]))
             for (let i = 0; i < merchList.length; i++) {
@@ -512,6 +496,8 @@ const MainApp = () => {
       .then(data => {
         dispatch(assignTable([]))
         let merchList = (JSON.parse(data))
+
+        merchList.sort((a, b) => (a[blankColumn]> b[blankColumn]) ? 1 : -1)
         const blankColumn =(Object.keys(merchList[0])[0])
         for (let i = 0; i < merchList.length; i++) {
           merchList[i].rownum = i
@@ -536,40 +522,20 @@ const MainApp = () => {
           ))}
         </div>
       </div>
-
+    
       <MenuButton className = 'nav' clickFunction={pageRefresh} title = "Page Refresh"/>
-      <p>Table Name: {table}</p>
-      <p>Last Refresh: {time}</p>
+      <div>
+        <p>Table Name: {table}</p>
+        <p>Last Refresh: {time}</p>
      
-      <p>Page {pagenum} with {rows} rows per page</p> <div> 
+        <p>Page {pagenum} with {rows} rows per page</p> 
+      
       </div>
       <hr />
-      {/*
-      <div>
-        <h2>Legend</h2>
-        <p>All cells are editable.</p>
-        <p>Once you start editing, the row being edited will be highlighted yellow</p>
-        <p>Selecting delete will highlight the row as red</p>
-      </div>
-      <div>
-        <h2>Constraints</h2>
-        <p>User should not be allowed to save an empty row (after insertion) - a popup will br thrown as an error</p>
-        <p></p>
-        <p>Selecting delete will highlight the row as red</p>
-      </div>
-      */}
-      {/*<button className = 'nav' onClick={commitDeletes}>Commit Deletion</button> */}
-      {/*<button className = 'nav' onClick={commitAllEdits}>Commit New Edits</button> */}
       <button className = 'nav' onClick={addNewRow}>Add Blank Row</button>
-      {/*<button className = 'nav' onClick={commitNewRows}>Commit New Rows</button>*/}
       <button className = 'nav' onClick={commitAllChanges}>Commit All Changes</button>
       <hr />
-      
-      
-      {/* <p>New Tray: {newTray}</p>
-      <p>Delete Tray: {deleteTray}</p> */}
       <div>
-        
         <button className = 'navButtons' onClick={handlePrevPage}>◀ Previous</button>
         <button className = 'rpp' onClick={setRowsPerPage}>Set Rows Per Page</button>
         <button className = 'navButtons' onClick={handleNextPage}>Next ▶</button>
