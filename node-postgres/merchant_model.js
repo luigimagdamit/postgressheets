@@ -77,6 +77,18 @@ const getMerchants = (body) => {
   }
   const createBlankRow = (body) => {
     return new Promise(function(resolve, reject) {
+      let q = `INSERT INTO ${body.table} (${body.fields}) VALUES (${body.values})`
+      console.log(q)
+      pool.query(q, (error, results) => {
+        if (error) {
+          reject(error)
+        }
+        resolve("Attempted to Create Blank Row")
+      })
+    })
+  }
+  const createFilledRow = (body) => {
+    return new Promise(function(resolve, reject) {
       let q = `INSERT INTO ${body.table} VALUES (NULL)`
       console.log(q)
       pool.query(q, (error, results) => {
