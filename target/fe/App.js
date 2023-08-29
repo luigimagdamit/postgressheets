@@ -3,7 +3,7 @@ import './App.css';
 import store from './app/store'
 import { Provider } from 'react-redux'
 import { useSelector, useDispatch } from 'react-redux'
-import { assignTable, assignTableName, addRow, addToDelete, addToNew, addToEdit, replaceEditRow, clearDeleteTray, clearNewTray, clearEditTray, removeFromDelete } from './features/tableSlice'
+import { assignTable, assignTableName, addRow, addToDelete, addToNew, addToEdit, replaceEditRow, clearDeleteTray, clearNewTray, clearEditTray, removeFromDelete, editRow, replaceRow, addToEditID } from './features/tableSlice'
 
 const port = "3001"
 const backend = `http://localhost:${port}`
@@ -17,14 +17,16 @@ const Entry = ({dataProps, args}) => {
 
   }, [])
   const [data, setData] = useState({})
+  const [loaded, setLoaded] = useState(false)
   const [edited, setEdited] = useState({})
   const [status, setStatus] = useState("default")
   
   
   useEffect(() => {
-    setEdited({})
-    setData(dataProps)
-    console.log(newTray.includes(dataProps.rownum))
+    if(loaded === false) {
+      setData(dataProps)
+    }
+    setLoaded(true)
   }, [])
 
   useEffect(() => {
@@ -38,6 +40,7 @@ const Entry = ({dataProps, args}) => {
     })
     if(res.length === 0) {
       dispatch(addToEdit(edited))
+      dispatch(addToEditID(data.rownum))
     }
     else {
       dispatch(replaceEditRow(data.rownum))
@@ -56,19 +59,26 @@ const Entry = ({dataProps, args}) => {
       console.log(data)
       setStatus("delete")
       dispatch(addToDelete(data.rownum))
+      console.log(data.rownum + " added to delete")
     }
   }
   const handleInputChange = (e, field) => {
     let newEdited = {
+      ...data,
       ...edited,
       rownum: data.rownum,
       id: data[args.keyColumn]
     }
+    let newData = {
+      ...data,
+      ...edited,
+      rownum: data.rownum,
+    }
     newEdited[field] = e
-    console.log(newEdited)
     setEdited(newEdited)
+    setData(newData)
+    console.log(newEdited)
     // error because this is not accurate until next call
-    console.log(edited)
 
     setStatus("edit")
   }
@@ -87,9 +97,8 @@ const Entry = ({dataProps, args}) => {
     }
   }
   return (
-      <tr onClick={() => console.log(edited)} style={styles[newTray.includes(data.rownum) ? styles.new : status]}>
-      
-      <td onClick={() => console.log(data)}>
+      <tr onClick={() => console.log(edited)} style={styles[status]}>
+      <td onClick={() => console.log(newTray, editTray)}>
         {/*<button onClick={updateMerchant}>Update Local State</button>*/}
         <input onClick={deleteMerchant}type="checkbox"/>
         <p>Delete </p>
@@ -140,9 +149,6 @@ const Column = ({rowname, args, setBlankColumn}) => {
     })
     .then(data => {
       let uniqueList = (JSON.parse(data))
-      for(let i = 0; i < uniqueList.length; i++) {
-        console.log(uniqueList[i][rowname])
-      }
       setUniques(uniqueList)
     })
   
@@ -208,7 +214,17 @@ const Column = ({rowname, args, setBlankColumn}) => {
   )
 }
 const Table = ({itemArrayProps, args, setBlankColumn}) => {
-  const itemArray = Array.from(itemArrayProps).reverse();
+
+  const tableRedux = useSelector((state) => state.table.value)
+  const [itemArray, setItemArray] = useState([])
+  useEffect(() => {
+    console.log(itemArray)
+    let newArr = [
+      ...tableRedux
+    ].reverse()
+    
+    setItemArray(newArr)
+  }, [tableRedux])
   return (
     <div>
     <table className = 'table'>
@@ -224,7 +240,7 @@ const Table = ({itemArrayProps, args, setBlankColumn}) => {
           null}
         </tr>
       {itemArray.map((user) => (
-        <Entry dataProps = {user} args = {args}/>
+        <Entry key = {user.rownum} dataProps = {user} args = {args}/>
       ))}
       </tbody>
     </table>
@@ -250,6 +266,8 @@ const MainApp = () => {
   const deleteTray = useSelector((state) => state.table.deleteTray)
   const newTray = useSelector((state) => state.table.newTray)
   const editTray = useSelector((state) => state.table.editTray)
+  
+  const editTrayID = useSelector((state) => state.table.editTrayID)
   const dispatch = useDispatch()
   
   const [tableList, setTableList] = useState([])
@@ -259,8 +277,6 @@ const MainApp = () => {
   const [table, setTable] = useState("merchants")
   const [keyColumn, setKeyColumn] = useState("id")
   const [blankColumn, setBlankColumn] = useState("id")
-  const [page, setPage] = useState(0)
-  const [searchColumn, setSearchColumn] = useState("id")
   const [time, setTime] = useState("")
   const args = {
     rows: rows,
@@ -269,6 +285,8 @@ const MainApp = () => {
     page: pagenum
   }
   useEffect(() => {
+    console.log("bruh")
+    console.log(tableRedux)
   }, []);
 
   const getTables = () => {
@@ -301,9 +319,11 @@ const MainApp = () => {
     for (const key of firstEntry) {
       newRow[key] = ""
     }
+    console.log(tableRedux.length)
     newRow = {
       ...newRow,
-      rownum: tableRedux.length + 1 }
+      rownum: tableRedux.length }
+
     dispatch(addToNew(newRow.rownum))
     dispatch(addRow(newRow))
   }
@@ -339,8 +359,12 @@ const MainApp = () => {
   
   const commitNewRow = (row) => {
     console.log("yuh")
-     let fields = Object.keys(row)
-     let values = Object.values(row)
+    let rowCopy = {
+      ...row
+    }
+     delete rowCopy["id"]
+     let fields = Object.keys(rowCopy)
+     let values = Object.values(rowCopy)
      fields.pop()
      values.pop()
      for(let i = 0; i < fields.length; i++) {
@@ -367,7 +391,9 @@ const MainApp = () => {
   }
   const commitNewRows = () => {
     for (let i = 0; i < newTray.length; i++) {
-      commitNewRow(newTray[i])
+      const result = editTray.filter(row => row.rownum === newTray[i])
+      console.log(result)
+      //commitNewRow(newTray[i])
     }
   }
   const commitNewEdit = (index) => {
@@ -397,7 +423,17 @@ const MainApp = () => {
   }
   const commitAllEdits = () => {
     for (let i = 0; i < editTray.length; i++) {
-      commitNewEdit(i)
+      let curr = {
+        ...editTray[i]
+      }
+      console.log(curr)
+      if(newTray.includes(curr.rownum)) {
+        commitNewRow(curr)
+      }
+      else {
+        commitNewEdit(i)
+      }
+
     }
   }
   const deleteRow = (rownum) => {
@@ -516,6 +552,7 @@ const MainApp = () => {
   }
   return (
     <div>
+      <p>{editTrayID}</p>
       <div class="dropdown" onMouseEnter={getTables}>
         <button class="dropbtn">{table}▼</button>
         <div class="dropdown-content">
@@ -524,22 +561,21 @@ const MainApp = () => {
           ))}
         </div>
       </div>
+    
       <MenuButton className = 'nav' clickFunction={pageRefresh} title = "Page Refresh"/>
-      <p>Table Name: {table}</p>
-      <p>Last Refresh: {time}</p>
+      <div>
+        <p>Table Name: {table}</p>
+        <p>Last Refresh: {time}</p>
      
-      <p>Page {pagenum} with {rows} rows per page</p> <div> 
+        <p>Page {pagenum} with {rows} rows per page</p> 
+      
       </div>
       <hr />
+      <button onClick={commitNewRows}> test</button>
       <button className = 'nav' onClick={addNewRow}>Add Blank Row</button>
       <button className = 'nav' onClick={commitAllChanges}>Commit All Changes</button>
       <hr />
-      
-      
-      {/* <p>New Tray: {newTray}</p>
-      <p>Delete Tray: {deleteTray}</p> */}
       <div>
-        
         <button className = 'navButtons' onClick={handlePrevPage}>◀ Previous</button>
         <button className = 'rpp' onClick={setRowsPerPage}>Set Rows Per Page</button>
         <button className = 'navButtons' onClick={handleNextPage}>Next ▶</button>

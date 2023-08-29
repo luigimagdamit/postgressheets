@@ -3,7 +3,7 @@ import './App.css';
 import store from './app/store'
 import { Provider } from 'react-redux'
 import { useSelector, useDispatch } from 'react-redux'
-import { assignTable, assignTableName, addRow, addToDelete, addToNew, addToEdit, replaceEditRow, clearDeleteTray, clearNewTray, clearEditTray, removeFromDelete, editRow, replaceRow, addToEditID } from './features/tableSlice'
+import { assignTable, assignTableName, addRow, addToDelete, addToNew, addToEdit, replaceEditRow, clearDeleteTray, clearNewTray, clearEditTray, removeFromDelete, editRow, replaceRow, addToEditID, clearEditID } from './features/tableSlice'
 
 const port = "3001"
 const backend = `http://localhost:${port}`
@@ -30,7 +30,10 @@ const Entry = ({dataProps, args}) => {
   }, [])
 
   useEffect(() => {
-    updateMerchant()
+    if (status !== "default") {
+
+      updateMerchant()
+    }
   }, [edited])
 
   function updateMerchant() {
@@ -329,6 +332,10 @@ const MainApp = () => {
   }
   const pageRefresh = () => {
     getTime()
+    dispatch(clearNewTray)
+    dispatch(clearEditTray)
+    dispatch(clearDeleteTray)
+    dispatch(clearEditID)
     dispatch(assignTable([]))
     fetch(`${backend}/?table=${table}&page=${pagenum}&limit=${rows}`)
       .then(response => {
@@ -393,6 +400,7 @@ const MainApp = () => {
     for (let i = 0; i < newTray.length; i++) {
       const result = editTray.filter(row => row.rownum === newTray[i])
       console.log(result)
+      alert("Cannot submit blank rows")
       //commitNewRow(newTray[i])
     }
   }
@@ -404,20 +412,22 @@ const MainApp = () => {
     let fields = Object.keys(curr)
     let values = Object.values(curr)
 
+     for(let i = 0; i < fields.length; i++) {
+      fields[i] = "\"" + fields[i] + "\"" 
+      values[i] = "\'" + values[i] + "\'" 
+     }
      console.log(fields[0])
-    let bodyJSON = JSON.stringify({table, fields, values})
-    console.log(bodyJSON)
+    let bodyJSON = JSON.stringify({table, fields, values, key_column: keyColumn, id: curr.id})
+    console.log(bodyJSON.id)
 
-    for(let i = 0; i < fields.length; i++) {
+    
       fetch(`${backend}/update`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({table, fields: fields[i], values: values[i], key_column: keyColumn, id: curr[keyColumn]}),
+        body: bodyJSON 
       })
-    }
-
      
   
   }
@@ -463,15 +473,13 @@ const MainApp = () => {
     }
   }
   const commitAllChanges = () => {
-    if (newTray.length != 0) {
-      commitNewRows()
-    }
     if (deleteTray.length != 0) {
       commitDeletes()
     }
     if (editTray.length != 0) {
       commitAllEdits()
     }
+    commitNewRows()
 
     dispatch(clearNewTray())
 
@@ -553,6 +561,7 @@ const MainApp = () => {
   return (
     <div>
       <p>{editTrayID}</p>
+      <p>{blankColumn}</p>
       <div class="dropdown" onMouseEnter={getTables}>
         <button class="dropbtn">{table}▼</button>
         <div class="dropdown-content">
