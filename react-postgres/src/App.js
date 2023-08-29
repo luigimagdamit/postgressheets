@@ -97,8 +97,7 @@ const Entry = ({dataProps, args}) => {
     }
   }
   return (
-      <tr onClick={() => console.log(edited)} style={styles[newTray.includes(data.rownum) ? styles.new : status]}>
-      
+      <tr onClick={() => console.log(edited)} style={styles[status]}>
       <td onClick={() => console.log(newTray, editTray)}>
         {/*<button onClick={updateMerchant}>Update Local State</button>*/}
         <input onClick={deleteMerchant}type="checkbox"/>
