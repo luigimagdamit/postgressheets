@@ -100,7 +100,7 @@ const getMerchants = (body) => {
     })
   }
   const updateRow = (body) => {
-    let q2 = `UPDATE ${body.table} SET "${body.fields}" = '${body.values}' WHERE "${body.key_column}" = '${body.id}';`
+    let q2 = `UPDATE ${body.table} SET (${body.fields}) = (${body.values}) WHERE "${body.key_column}" = '${body.id}';`
     console.log(q2)
     return new Promise(function(resolve, reject) {
       

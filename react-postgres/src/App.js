@@ -280,7 +280,9 @@ const MainApp = () => {
   const [table, setTable] = useState("merchants")
   const [keyColumn, setKeyColumn] = useState("id")
   const [blankColumn, setBlankColumn] = useState("id")
+  const [showDebug, setShowDebug] = useState(false)
   const [time, setTime] = useState("")
+  const [debugMessages, setDebugMessages] = useState([])
   const args = {
     rows: rows,
     table: table,
@@ -432,6 +434,8 @@ const MainApp = () => {
   
   }
   const commitAllEdits = () => {
+
+    addDebugMessage(`[${time}] - EDIT: SENDING EDIT BACKEND REQUEST FOR: ` + JSON.stringify(editTray))
     for (let i = 0; i < editTray.length; i++) {
       let curr = {
         ...editTray[i]
@@ -467,6 +471,8 @@ const MainApp = () => {
     console.log(body)
   }
   const commitDeletes = () => {
+
+    addDebugMessage(`[${time}] - DELETE: SENDING DELETE REQUEST TO SERVER FOR: ` + JSON.stringify(deleteTray))
     for (let i = 0; i < deleteTray.length; i++) {
       deleteRow(deleteTray[i])
       console.log(deleteTray[i])
@@ -485,6 +491,7 @@ const MainApp = () => {
 
     dispatch(clearDeleteTray())
     dispatch(clearEditTray())
+    dispatch(clearEditID())
     setTimeout(() => {
       pageRefresh()
     }, 3000)
@@ -558,10 +565,41 @@ const MainApp = () => {
     var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
     setTime(time)
   }
+  const debugMenu = () => {
+    return (
+      <div className = "debugMenu">
+        <h1>Debug Menu</h1>
+        <h2>Table Name: {table}</h2>
+        <h2>Blank Column: {blankColumn}</h2>
+        <h2>Edit Tray:</h2>
+
+        {editTrayID.map((rowDebug) => (<p>{JSON.stringify(rowDebug)}</p>))}
+        <h2>New Tray: </h2>
+
+        {newTray.map((rowDebug) => (<p>{JSON.stringify(rowDebug)}</p>))}
+        <h2>Delete Tray: </h2>
+
+        {deleteTray.map((rowDebug) => (<p>{JSON.stringify(rowDebug)}</p>))}
+        <h2>Edits</h2>
+        {editTray.map((rowDebug) => (<p>{JSON.stringify(rowDebug)}</p>))}
+        {debugMessages.map((message) => (<p>{message}</p>))}
+      </div>
+    )
+  }
+  const debugToggle = () => {
+    setShowDebug(!showDebug)
+  }
+  const addDebugMessage = (message) => {
+    setDebugMessages([
+      ...debugMessages,
+      message
+    ])
+  }
   return (
     <div>
-      <p>{editTrayID}</p>
-      <p>{blankColumn}</p>
+      <button onClick={debugToggle}>Toggle Debug Menu</button>
+      {showDebug ? debugMenu() : undefined}
+      <hr />
       <div class="dropdown" onMouseEnter={getTables}>
         <button class="dropbtn">{table}▼</button>
         <div class="dropdown-content">
