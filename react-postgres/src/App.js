@@ -3,7 +3,7 @@ import './App.css';
 import store from './app/store'
 import { Provider } from 'react-redux'
 import { useSelector, useDispatch } from 'react-redux'
-import { assignTable, assignTableName, addRow, addToDelete, addToNew, addToEdit, replaceEditRow, clearDeleteTray, clearNewTray, clearEditTray, removeFromDelete, editRow, replaceRow, addToEditID, clearEditID } from './features/tableSlice'
+import { assignTable, assignTableName, assignColumnTypes, addRow, addToDelete, addToNew, addToEdit, replaceEditRow, clearDeleteTray, clearNewTray, clearEditTray, removeFromDelete, editRow, replaceRow, addToEditID, clearEditID } from './features/tableSlice'
 
 const port = "3001"
 const backend = `http://localhost:${port}`
@@ -50,6 +50,12 @@ const Entry = ({dataProps, args}) => {
       dispatch(addToEdit(edited))
     }
     
+  }
+  const handleDelete = () => {
+    let confirm = prompt("Confirm delete? (y/n)")
+    if(confirm === "y") {
+      deleteMerchant()
+    }
   }
   const deleteMerchant = () => {
     console.log(deleteTray)
@@ -102,7 +108,7 @@ const Entry = ({dataProps, args}) => {
       <tr onClick={() => console.log(edited)} style={styles[status]}>
       <td onClick={() => console.log(newTray, editTray)}>
         {/*<button onClick={updateMerchant}>Update Local State</button>*/}
-        <input onClick={deleteMerchant}type="checkbox"/>
+        <input onClick={handleDelete}type="checkbox"/>
         <p>Delete </p>
         <img style={{width: "20px", height: "20px"}} src = {require("./IMG_3061.jpg")} />
       </td>
@@ -123,7 +129,7 @@ const Entry = ({dataProps, args}) => {
   )
 }
 
-const Column = ({rowname, args, setBlankColumn}) => {
+const Column = ({rowname, args, dataType, setBlankColumn}) => {
 
   const dispatch = useDispatch()
   const tableRedux = useSelector((state) => state.table.value)
@@ -194,6 +200,7 @@ const Column = ({rowname, args, setBlankColumn}) => {
   return(
     <div>
       <p>{rowname}</p>
+      <p>-{dataType}-</p>
       {
         rowname !== "rownum" ?
         <div class="dropdown">
@@ -215,7 +222,7 @@ const Column = ({rowname, args, setBlankColumn}) => {
     </div>
   )
 }
-const Table = ({itemArrayProps, args, setBlankColumn}) => {
+const Table = ({itemArrayProps, args, setBlankColumn, columnTypes}) => {
 
   const tableRedux = useSelector((state) => state.table.value)
   const [itemArray, setItemArray] = useState([])
@@ -236,7 +243,7 @@ const Table = ({itemArrayProps, args, setBlankColumn}) => {
           :
           {itemArray[0] ? 
             Object.keys(itemArray[0]).map((field) => (
-            <td><Column rowname = {field} args = {args} setBlankColumn={setBlankColumn}/></td>
+            <td><Column dataType = {columnTypes[field]} rowname = {field} args = {args} setBlankColumn={setBlankColumn}/></td>
           )) 
           : 
           null}
@@ -268,7 +275,7 @@ const MainApp = () => {
   const deleteTray = useSelector((state) => state.table.deleteTray)
   const newTray = useSelector((state) => state.table.newTray)
   const editTray = useSelector((state) => state.table.editTray)
-  
+  const columnTypes = useSelector((state) => state.table.columnTypes)
   const editTrayID = useSelector((state) => state.table.editTrayID)
   const dispatch = useDispatch()
   
@@ -312,6 +319,26 @@ const MainApp = () => {
 
       }
               
+    })
+  }
+  const getColumnTypes = () => {
+    fetch(`${backend}/getColumnTypes?table=${table}`)
+      .then(response => {
+        return response.text()
+      })
+      .then(data => {
+        console.log(data)
+        let merchList = (JSON.parse(data))
+        let tableList = {}
+     
+        if(merchList.length !== 0) {
+          for(let i = 0; i < merchList.length; i++) {
+            tableList[merchList[i].column_name] = merchList[i].data_type 
+            //tableList.push(merchList[i].data_type)
+          }
+        }
+        console.log(tableList)
+        dispatch(assignColumnTypes(tableList))
     })
   }
   const addNewRow = () => {
@@ -362,6 +389,7 @@ const MainApp = () => {
         }
         
       });
+    getColumnTypes()
   }
   
   const commitNewRow = (row) => {
@@ -598,7 +626,7 @@ const MainApp = () => {
     <div className="App">
       <h1 className = "title">ORI Data Management System</h1>
       {showDebug ? debugMenu() : undefined}
-
+      <button onClick={() => console.log(columnTypes)}>CLICK</button>
       <div className="areas">
         ``
       <div className="area2">
@@ -616,7 +644,7 @@ const MainApp = () => {
       
       <div className="area1">
         <MenuButton className = 'nav' clickFunction={pageRefresh} title = "Page Refresh"/>
-          
+        <button onClick={getColumnTypes}>BRUH</button> 
         <button className = 'nav' onClick={addNewRow}>Add Row</button>
         <button className = 'rpp' onClick={setRowsPerPage}>Set Rows Per Page</button>
         <button className = 'nav' onClick={commitAllChanges}>Save</button>
@@ -626,7 +654,7 @@ const MainApp = () => {
       <hr />
       <div>
       </div>
-      <Table itemArrayProps = {tableRedux} args = {args} setBlankColumn = {setBlankColumn}/>
+      <Table columnTypes = {columnTypes} itemArrayProps = {tableRedux} args = {args} setBlankColumn = {setBlankColumn}/>
       <p>Page {pagenum} with {rows} rows per page</p> 
       <button className = 'navButtons' onClick={handlePrevPage}>◀ Previous</button>
       <button className = 'navButtons' onClick={handleNextPage}>Next ▶</button>
