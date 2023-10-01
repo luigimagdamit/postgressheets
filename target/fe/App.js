@@ -229,7 +229,7 @@ const Table = ({itemArrayProps, args, setBlankColumn}) => {
     setItemArray(newArr)
   }, [tableRedux])
   return (
-    <div>
+    <div className = "tableDiv">
     <table className = 'table'>
       <tbody>
         <tr className='rownames'>
@@ -333,7 +333,6 @@ const MainApp = () => {
     dispatch(addRow(newRow))
   }
   const pageRefresh = () => {
-    getTime()
     dispatch(clearNewTray)
     dispatch(clearEditTray)
     dispatch(clearDeleteTray)
@@ -402,7 +401,6 @@ const MainApp = () => {
     for (let i = 0; i < newTray.length; i++) {
       const result = editTray.filter(row => row.rownum === newTray[i])
       console.log(result)
-      alert("Cannot submit blank rows")
       //commitNewRow(newTray[i])
     }
   }
@@ -410,7 +408,6 @@ const MainApp = () => {
     let curr = {
       ...editTray[index]
     }
-    addDebugMessage(`${time}EDIT: SENDING EDIT BACKEND REQUEST FOR: ` + JSON.stringify(curr))
     delete curr.rownum
     let fields = Object.keys(curr)
     let values = Object.values(curr)
@@ -435,6 +432,8 @@ const MainApp = () => {
   
   }
   const commitAllEdits = () => {
+
+    addDebugMessage(`[${time}] - EDIT: SENDING EDIT BACKEND REQUEST FOR: ` + JSON.stringify(editTray))
     for (let i = 0; i < editTray.length; i++) {
       let curr = {
         ...editTray[i]
@@ -460,7 +459,6 @@ const MainApp = () => {
       target: result[0][keyColumn]
 
     }
-    addDebugMessage(`[${time}]DELETE: SENDING DELETE REQUEST TO SERVER FOR: ` + JSON.stringify(result))
     fetch(`${backend}/deleteRow`, {
       method: 'POST',
       headers: {
@@ -471,6 +469,8 @@ const MainApp = () => {
     console.log(body)
   }
   const commitDeletes = () => {
+
+    addDebugMessage(`[${time}] - DELETE: SENDING DELETE REQUEST TO SERVER FOR: ` + JSON.stringify(deleteTray))
     for (let i = 0; i < deleteTray.length; i++) {
       deleteRow(deleteTray[i])
       console.log(deleteTray[i])
@@ -490,6 +490,7 @@ const MainApp = () => {
     dispatch(clearDeleteTray())
     dispatch(clearEditTray())
     dispatch(clearEditID())
+    getTime()
     setTimeout(() => {
       pageRefresh()
     }, 3000)
@@ -594,38 +595,42 @@ const MainApp = () => {
     ])
   }
   return (
-    <div>
-      <button onClick={debugToggle}>Toggle Debug Menu</button>
+    <div className="App">
+      <h1 className = "title">ORI Data Management System</h1>
       {showDebug ? debugMenu() : undefined}
-      <hr />
-      <div class="dropdown" onMouseEnter={getTables}>
-        <button class="dropbtn">{table}▼</button>
-        <div class="dropdown-content">
-          {tableList.map((tableName) => (
-            <TableButton tableName = {tableName} changeTableFunc = {setTable}/>
-          ))}
+
+      <div className="areas">
+        ``
+      <div className="area2">
+        <p>Last Refresh: {time}</p>
+        <div class="dropdown" onMouseEnter={getTables}>
+          <button class="dropbtn">{table}▼</button>
+          <div class="dropdown-content">
+            {tableList.map((tableName) => (
+              <TableButton tableName = {tableName} changeTableFunc = {setTable}/>
+            ))}
+          </div>
         </div>
       </div>
-    
-      <MenuButton className = 'nav' clickFunction={pageRefresh} title = "Page Refresh"/>
-      <div>
-        <p>Table Name: {table}</p>
-        <p>Last Refresh: {time}</p>
-     
-        <p>Page {pagenum} with {rows} rows per page</p> 
+      <hr />
+      
+      <div className="area1">
+        <MenuButton className = 'nav' clickFunction={pageRefresh} title = "Page Refresh"/>
+          
+        <button className = 'nav' onClick={addNewRow}>Add Row</button>
+        <button className = 'rpp' onClick={setRowsPerPage}>Set Rows Per Page</button>
+        <button className = 'nav' onClick={commitAllChanges}>Save</button>
+      </div>
       
       </div>
       <hr />
-      <button onClick={commitNewRows}> test</button>
-      <button className = 'nav' onClick={addNewRow}>Add Blank Row</button>
-      <button className = 'nav' onClick={commitAllChanges}>Commit All Changes</button>
-      <hr />
       <div>
-        <button className = 'navButtons' onClick={handlePrevPage}>◀ Previous</button>
-        <button className = 'rpp' onClick={setRowsPerPage}>Set Rows Per Page</button>
-        <button className = 'navButtons' onClick={handleNextPage}>Next ▶</button>
       </div>
       <Table itemArrayProps = {tableRedux} args = {args} setBlankColumn = {setBlankColumn}/>
+      <p>Page {pagenum} with {rows} rows per page</p> 
+      <button className = 'navButtons' onClick={handlePrevPage}>◀ Previous</button>
+      <button className = 'navButtons' onClick={handleNextPage}>Next ▶</button>
+      <button onClick={debugToggle}>Toggle Debug Menu</button>
     </div>
   );
 }

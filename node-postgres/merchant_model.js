@@ -38,6 +38,19 @@ const getTables = () => {
     })
   })
 }
+const columnTypes = (body) => {
+ return new Promise(function(resolve, reject) {
+    
+    q2 = `SELECT column_name, data_type FROM information_schema.columns WHERE table_name = '${body.table}'`
+    console.log(q2)
+    pool.query(q2, (error, results) => {
+      if (error) {
+        reject(error)
+      }
+      resolve(results.rows);
+    })
+  })
+}
 const processQuery = (query) => {
   return new Promise(function(resolve, reject) {
     
@@ -219,5 +232,6 @@ const getMerchants = (body) => {
     createBlankRow,
     updateRow,
     filterColumn,
-    getTables 
+    getTables,
+    columnTypes
   }

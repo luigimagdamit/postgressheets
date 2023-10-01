@@ -67,7 +67,6 @@ const Entry = ({dataProps, args}) => {
   }
   const handleInputChange = (e, field) => {
     let newEdited = {
-      ...data,
       ...edited,
       rownum: data.rownum,
       id: data[args.keyColumn]
@@ -408,6 +407,7 @@ const MainApp = () => {
     let curr = {
       ...editTray[index]
     }
+    console.log(curr)
     delete curr.rownum
     let fields = Object.keys(curr)
     let values = Object.values(curr)
@@ -477,11 +477,11 @@ const MainApp = () => {
     }
   }
   const commitAllChanges = () => {
-    if (deleteTray.length != 0) {
-      commitDeletes()
-    }
     if (editTray.length != 0) {
       commitAllEdits()
+    }
+    if (deleteTray.length != 0) {
+      commitDeletes()
     }
     commitNewRows()
 

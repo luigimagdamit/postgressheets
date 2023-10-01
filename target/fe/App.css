@@ -1,7 +1,25 @@
 .App {
-  text-align: center;
+  background-color: #c5d1e6;
 }
-
+.title {
+  background: linear-gradient(to right, #ccc, #ccc); /* Replace #ccc with your desired shade of grey */
+  text-align: center;
+  display: inline;
+  padding: 10px; /* Adjust the padding to control the size of the rectangle */
+}
+.areas {
+  display: flex;
+}
+.area1 {
+  display: flex;
+  flex-direction: column;
+  width: 200px;
+}
+.area2 {
+  width: 200px;
+  display: flex;
+  flex-direction: column;
+}
 .App-logo {
   height: 40vmin;
   pointer-events: none;
@@ -14,7 +32,11 @@
     animation: App-logo-spin infinite 20s linear;
   }
 }
-
+.tableDiv {
+  overflow-y:auto;
+  height: 500px;
+  background-color: white;
+}
 .App-header {
   background-color: #282c34;
   min-height: 100vh;
@@ -76,9 +98,6 @@ td {
 .nav {
   background-color: white;
   color: black;
-  border-radius: 10px;
-  border-style: solid;
-  border-color: black;
 }
 .navButtons {
   background-color: white;
@@ -87,9 +106,7 @@ td {
 .rpp {
   background-color: white;
   color: black;
-  border-radius: 10px;
   border-color: black;
-  border-style: solid;
 }
 .update {
   background-color: #4CAF50; /* Green */
@@ -98,11 +115,8 @@ td {
  /* Dropdown Button */
  .dropbtn {
   width: 200px;
-  background-color: #d3d3d3;
-  border-radius: 10px;
+  background-color: white;
   color: black;
-  padding: 16px;
-  font-size: 16px;
   border: none;
 }
 

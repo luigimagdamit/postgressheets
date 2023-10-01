@@ -41,6 +41,19 @@ app.get('/getTables', (req, res) => {
   })
 })
 
+app.get('/getColumnTypes', (req, res) => {
+  console.log("column types")
+
+  let table = req.query.table
+  console.log(table)
+  merchant_model.columnTypes({table})
+  .then(response => {
+    res.status(200).send(response);
+  })
+  .catch(error => {
+    res.status(500).send(error);
+  })
+})
 
 
 // use the req.body as the input
