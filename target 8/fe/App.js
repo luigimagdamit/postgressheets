@@ -12,7 +12,6 @@ const Entry = ({dataProps, args}) => {
   const editTray = useSelector((state) => state.table.editTray)
   const newTray = useSelector((state) => state.table.newTray)
   const deleteTray = useSelector((state) => state.table.deleteTray)
-  const tableRedux = useSelector((state) => state.table.value)
   const dispatch = useDispatch()
   useEffect(() => {
 
@@ -29,12 +28,6 @@ const Entry = ({dataProps, args}) => {
     }
     setLoaded(true)
   }, [])
-  useEffect(() => {
-    if(loaded === false) {
-      setData(dataProps)
-    }
-    setLoaded(true)
-  }, [tableRedux])
 
   useEffect(() => {
     if (status !== "default") {
@@ -296,7 +289,6 @@ const MainApp = () => {
   const [showDebug, setShowDebug] = useState(false)
   const [time, setTime] = useState("")
   const [debugMessages, setDebugMessages] = useState([])
-  const [refresh, setRefresh] = useState(false);
   const args = {
     rows: rows,
     table: table,
@@ -307,11 +299,7 @@ const MainApp = () => {
     console.log("bruh")
     console.log(tableRedux)
   }, []);
-  useEffect(() => {
-    setTimeout(() => {
-      pageRefresh();
-    }, "1000")
-  }, [refresh])
+
   const getTables = () => {
     fetch(`${backend}/getTables/`)
       .then(response => {
@@ -390,6 +378,7 @@ const MainApp = () => {
               merchList[i].rownum = i
               dispatch(addRow(merchList[i]))
             }
+
             if(merchList[0]){
               const blankColumn =(Object.keys(merchList[0])[0])
               setBlankColumn(blankColumn)
@@ -401,7 +390,6 @@ const MainApp = () => {
         
       });
     getColumnTypes()
-    setRefresh(false)
   }
   
   const commitNewRow = (row) => {
@@ -541,11 +529,7 @@ const MainApp = () => {
     let rowsPerPage = prompt("Enter rows per page");
     setRows(rowsPerPage)
   }
-  const nextPageOps = () => {
-    handleNextPage();
-    setRefresh(true)
-  }
-function handleNextPage() {
+  function handleNextPage() {
     let newpage = pagenum + 1
     
 
@@ -673,7 +657,7 @@ function handleNextPage() {
       <Table columnTypes = {columnTypes} itemArrayProps = {tableRedux} args = {args} setBlankColumn = {setBlankColumn}/>
       <p>Page {pagenum} with {rows} rows per page</p> 
       <button className = 'navButtons' onClick={handlePrevPage}>◀ Previous</button>
-      <button className = 'navButtons' onClick={nextPageOps}>Next ▶</button>
+      <button className = 'navButtons' onClick={handleNextPage}>Next ▶</button>
       <button onClick={debugToggle}>Toggle Debug Menu</button>
     </div>
   );
